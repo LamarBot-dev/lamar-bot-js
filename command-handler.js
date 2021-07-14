@@ -13,10 +13,10 @@ module.exports = {
         },
     }) => {
         if (
-            !message.content.startsWith(prefix) ||
+            !message.content.toLowerCase().startsWith(prefix.toLowerCase()) ||
             (message.author.bot && !options.allowbots)
         )
-            return !message.content.startsWith(prefix) ? "no-prefix" : "bot";
+            return !message.content.toLowerCase().startsWith(prefix.toLowerCase()) ? "no-prefix" : "bot";
         const args = message.content
             .toLowerCase()
             .slice(prefix.length)
