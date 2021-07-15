@@ -14,7 +14,7 @@ const prefix = "!l"
 
 const commandprefixadder = (command) => `${prefix} ${command}`
 
-const helpmenu = () => new Discord.MessageEmbed().setThumbnail("https://raw.githubusercontent.com/Ugric/lamar-bot-js/main/images/tv%20micheal.gif").setTitle("HELP MENU")
+const helpmenu = () => new Discord.MessageEmbed().setAuthor(message.author.tag, message.author.avatarURL()).setThumbnail("https://raw.githubusercontent.com/Ugric/lamar-bot-js/main/images/tv%20micheal.gif").setTitle("HELP MENU")
     .setDescription("commands:").addFields([{ name: commandprefixadder("weed"), value: "start growing your weed business!" }])
 
 
@@ -28,7 +28,7 @@ client.on('message', async message => {
             message, prefix,
             commands: {
                 weed: () => {
-                    message.reply("hi")
+                    message.reply(new Discord.MessageEmbed().setAuthor(message.author.tag, message.author.avatarURL()).setTitle("WEED FARM").setThumbnail("https://github.com/Ugric/lamar-bot-js/blob/main/images/gta5-logo.png?raw=true").setImage("https://github.com/Ugric/lamar-bot-js/blob/main/images/no%20no%20no.gif?raw=true").setDescription(`do \`${commandprefixadder("help")}\` to get a list of all commands!`))
                 },
                 help: () => {
 
@@ -36,7 +36,7 @@ client.on('message', async message => {
                 }
             }
             , notfound: (args) => {
-                message.reply(new Discord.MessageEmbed().setTitle("command not found!").setThumbnail("").setDescription(`do \`${commandprefixadder("help")}\` to get a list of all commands!`))
+                message.reply(new Discord.MessageEmbed().setAuthor(message.author.tag, message.author.avatarURL()).setTitle("command not found!").setThumbnail("https://github.com/Ugric/lamar-bot-js/blob/main/images/gta5-logo.png?raw=true").setImage("https://github.com/Ugric/lamar-bot-js/blob/main/images/no%20no%20no.gif?raw=true").setDescription(`do \`${commandprefixadder("help")}\` to get a list of all commands!`))
             }
         })
     } catch { }
