@@ -1,4 +1,4 @@
-<img align="right" alt="lamar smash window" src="./images/images/gta5-logo.png" height="150px">
+<img align="right" alt="lamar smash window" src="./images/gta5-logo.png" height="150px">
 
 # lamar-bot-js
  a discord bot based off lamar from gta 5
