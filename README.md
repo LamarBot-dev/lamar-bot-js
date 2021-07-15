@@ -3,8 +3,12 @@
 # lamar-bot-js
  a discord bot based off lamar from gta 5
 
-# Welcome message
+
 <img align="left" alt="welcome" src="./images/intro screenshot.PNG">
 
-# Businesses
+# Welcome message
+
+
 <img align="left" alt="welcome" src="./images/businesses screenshot.PNG">
+
+# Businesses
