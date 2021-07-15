@@ -10,27 +10,35 @@ disbut(client);
 
 const data = AutosaveJSON(__dirname + "/data.json", { users: {} })
 
+const inintro = []
+
 const prefix = "!l"
 
 const commandprefixadder = (command) => `${prefix} ${command}`
 
-const helpmenu = () => new Discord.MessageEmbed().setAuthor(message.author.tag, message.author.avatarURL()).setThumbnail("https://raw.githubusercontent.com/Ugric/lamar-bot-js/main/images/tv%20micheal.gif").setTitle("HELP MENU")
+const helpmenu = (message) => new Discord.MessageEmbed().setAuthor(message.author.tag, message.author.avatarURL()).setThumbnail("https://raw.githubusercontent.com/Ugric/lamar-bot-js/main/images/tv%20micheal.gif").setTitle("HELP MENU")
     .setDescription("commands:").addFields([{ name: commandprefixadder("weed"), value: "start growing your weed business!" }])
 
-const weedembedrenderer = (message, { seeds, growing, storage }) => new Discord.MessageEmbed()
-    .setAuthor(
-        message
-            .author
-            .tag,
-        message
-            .author
-            .avatarURL())
-    .setTitle("WEED FARM")
-    .addFields([{ name: "SEEDS", value: seeds }, { name: "GROWING", value: growing }, { name: "STORAGE", value: storage }])
-    .setThumbnail("https://github.com/Ugric/lamar-bot-js/blob/main/images/weed.png?raw=true")
-    .setImage("https://github.com/Ugric/lamar-bot-js/blob/main/images/lamar%20weed%20farm.jpg?raw=true")
-    .setDescription(`buy and sell weed with the controls at the bottom!`)
-    .setColor("#047000")
+const weedembedrenderer = (message, { seeds, growing, storage }) => {
+    let growingnum = 0
+    for (grow in growing) {
+        growingnum += (growing[grow].amount)
+    }
+    return new Discord.MessageEmbed()
+        .setAuthor(
+            message
+                .author
+                .tag,
+            message
+                .author
+                .avatarURL())
+        .setTitle("WEED FARM")
+        .addFields([{ name: "SEEDS", value: seeds }, { name: "GROWING", value: growingnum }, { name: "STORAGE", value: storage }])
+        .setThumbnail("https://github.com/Ugric/lamar-bot-js/blob/main/images/weed.png?raw=true")
+        .setImage("https://github.com/Ugric/lamar-bot-js/blob/main/images/lamar%20weed%20farm.jpg?raw=true")
+        .setDescription(`buy and sell weed with the controls at the bottom!`)
+        .setColor("#047000")
+}
 
 
 client.on('ready', () => {
@@ -43,6 +51,8 @@ client.on('message', async message => {
                 message, prefix,
                 commands: {
                     create: async () => {
+                        if (inintro.includes(message.author.id)) return
+                        inintro.push(message.author.id)
                         await message.author.send(new Discord.MessageEmbed()
                             .setAuthor(
                                 message
@@ -57,6 +67,10 @@ client.on('message', async message => {
                             .setDescription(`Hello ${message.author.username}, and welcome to the Lamar Bot experience!`)
                         )
                         await snooze(5000)
+                        await message.author.send(new Discord.MessageEmbed()
+                            .setTitle(`${message.author.username}'s phone`)
+                            .setThumbnail("https://github.com/Ugric/lamar-bot-js/blob/main/images/ifruit.png?raw=true")
+                        )
                         let typingmessage = await message.author.send(new Discord.MessageEmbed()
                             .setDescription(`UNKNOWN is typing...`)
                         )
@@ -66,7 +80,6 @@ client.on('message', async message => {
                                 "UNKNOWN"
                                 , "https://github.com/Ugric/lamar-bot-js/blob/main/images/unknown%20contact.PNG?raw=true"
                             )
-                            .setThumbnail("https://github.com/Ugric/lamar-bot-js/blob/main/images/ifruit.png?raw=true")
                             .setDescription(`What up, its ya boy LD.`)
                         )
                         await snooze(2500)
@@ -139,6 +152,38 @@ client.on('message', async message => {
                             .setImage("https://github.com/Ugric/lamar-bot-js/blob/main/images/lamar%20weed%20farm.jpg?raw=true")
                             .setDescription(`Grow weed and other drugs to sell and become extremely rich!`)
                         )
+                        await snooze(5000)
+                        await message.author.send(new Discord.MessageEmbed()
+                            .setAuthor(
+                                message
+                                    .author
+                                    .tag
+                                , message
+                                    .author
+                                    .avatarURL()
+                            )
+                            .setThumbnail("https://github.com/Ugric/lamar-bot-js/blob/main/images/infomation%20icon.png?raw=true")
+                            .setImage("https://github.com/Ugric/lamar-bot-js/blob/main/images/life%20invader.jpg?raw=true")
+                            .setDescription(`Follow people on Life Invader and tell people about your boring existance!`)
+                        )
+                        await snooze(5000)
+                        await message.author.send(new Discord.MessageEmbed()
+                            .setAuthor(
+                                message
+                                    .author
+                                    .tag
+                                , message
+                                    .author
+                                    .avatarURL()
+                            )
+                            .setThumbnail("https://github.com/Ugric/lamar-bot-js/blob/main/images/infomation%20icon.png?raw=true")
+                            .setImage("https://github.com/Ugric/lamar-bot-js/blob/main/images/your%20gonna%20be%20shot%20amigo.gif?raw=true")
+                            .setDescription(`Have fun!`)
+                        )
+                        data.current.users[message.author.id] = {
+                            businesses: { weed: { data: { seeds: 0, growing: [], storage: 0 }, limits: { seeds: 20, growing: 10, storage: 30 } } }
+                        }
+                        inintro.splice(inintro.indexOf(message.author.id), 1)
                     }
                 }
                 , notfound: () => {
@@ -164,7 +209,7 @@ client.on('message', async message => {
                 message, prefix,
                 commands: {
                     weed: () => {
-                        message.reply(weedembedrenderer(message, { seeds: 10, growing: 10, storage: 10 }),
+                        message.reply(weedembedrenderer(message, { seeds: 10, growing: [{ time: 0, amount: 10 }], storage: 10 }),
                             new disbut.MessageActionRow()
                                 .addComponent(
                                     new disbut.MessageButton()
@@ -185,7 +230,7 @@ client.on('message', async message => {
                     },
                     help: () => {
                         message.reply(
-                            helpmenu()
+                            helpmenu(message)
                         )
                     }
                 }
