@@ -10,6 +10,8 @@ disbut(client);
 
 const data = AutosaveJSON(__dirname + "/data.json", { users: {} })
 
+const weedmenu = {}
+
 const inintro = []
 
 const prefix = "!l"
@@ -19,7 +21,7 @@ const commandprefixadder = (command) => `${prefix} ${command}`
 const helpmenu = (message) => new Discord.MessageEmbed().setAuthor(message.author.tag, message.author.avatarURL()).setThumbnail("https://raw.githubusercontent.com/Ugric/lamar-bot-js/main/images/tv%20micheal.gif").setTitle("HELP MENU")
     .setDescription("commands:").addFields([{ name: commandprefixadder("weed"), value: "start growing your weed business!" }])
 
-const weedembedrenderer = (message, { seeds, growing, storage }) => {
+const weedembedrenderer = (message, weed) => {
     let growingnum = 0
     for (grow in growing) {
         growingnum += (growing[grow].amount)
@@ -33,8 +35,8 @@ const weedembedrenderer = (message, { seeds, growing, storage }) => {
                 .author
                 .avatarURL())
         .setTitle("WEED FARM")
-        .addFields([{ name: "SEEDS", value: seeds }, { name: "GROWING", value: growingnum }, { name: "STORAGE", value: storage }])
-        .setThumbnail("https://github.com/Ugric/lamar-bot-js/blob/main/images/weed.png?raw=true")
+        .addFields([{ name: "SEEDS", value: `${weed.data.seeds} / ${weed.limits.seeds}` }, { name: "GROWING", value: `${growingnum} / ${weed.limits.growing}` }, { name: "STORAGE", value: `${weed.data.storage} / ${weed.limits.storage}` }])
+        .setThumbnail("https://github.com/Ugric/lamar-bot-js/blob/main/images/weed.png?raw=true&nocache=1")
         .setImage("https://github.com/Ugric/lamar-bot-js/blob/main/images/lamar%20weed%20farm.jpg?raw=true")
         .setDescription(`buy and sell weed with the controls at the bottom!`)
         .setColor("#047000")
@@ -44,9 +46,66 @@ const weedembedrenderer = (message, { seeds, growing, storage }) => {
 client.on('ready', () => {
     console.log(`Logged in as ${client.user.tag}!`);
 });
+client.on('clickButton', async (button) => { console.log(button) })
 client.on('message', async message => {
     try {
-        if (!data.current.users[message.author.id]) {
+        if (data.current.users[message.author.id]) {
+            CHandle({
+                message, prefix,
+                commands: {
+                    weed: () => {
+                        if (weedmenu[message.author.id]) {
+                            weedmenu[message.author.id].delete().catch(() => { })
+                        }
+                        weedmenu[message.author.id] = message.reply(weedembedrenderer(message, data.current.users[message.author.id].businesses.weed),
+                            new disbut.MessageActionRow()
+                                .addComponent(
+                                    new disbut.MessageButton()
+                                        .setStyle("blurple")
+                                        .setID("buymax")
+                                        .setLabel("💵 buy max")
+                                ).addComponent(
+                                    new disbut.MessageButton()
+                                        .setStyle("blurple")
+                                        .setID("plant")
+                                        .setLabel("🌱 plant")
+                                ).addComponent(
+                                    new disbut.MessageButton()
+                                        .setStyle("blurple")
+                                        .setID("pick")
+                                        .setLabel("✂ pick")
+                                ).addComponent(new disbut.MessageButton()
+                                    .setStyle("blurple")
+                                    .setID("sellall")
+                                    .setLabel("💸 sell all")
+                                )
+                        )
+                    },
+                    help: () => {
+                        message.reply(
+                            helpmenu(message)
+                        )
+                    }
+                }
+                , notfound: () => {
+                    message.reply(
+                        new Discord.MessageEmbed()
+                            .setAuthor(
+                                message
+                                    .author
+                                    .tag
+                                , message
+                                    .author
+                                    .avatarURL()
+                            )
+                            .setTitle("command not found!")
+                            .setThumbnail("https://github.com/Ugric/lamar-bot-js/blob/main/images/infomation%20icon.png?raw=true")
+                            .setImage("https://github.com/Ugric/lamar-bot-js/blob/main/images/no%20no%20no.gif?raw=true")
+                            .setDescription(`Do \`${commandprefixadder("help")}\` to get a list of all commands!`)
+                    )
+                }
+            })
+        } else {
             CHandle({
                 message, prefix,
                 commands: {
@@ -181,7 +240,8 @@ client.on('message', async message => {
                             .setDescription(`Have fun!`)
                         )
                         data.current.users[message.author.id] = {
-                            businesses: { weed: { data: { seeds: 0, growing: [], storage: 0 }, limits: { seeds: 20, growing: 10, storage: 30 } } }
+                            money: 0,
+                            businesses: { weed: { data: { seeds: 0, growing: [], storage: 0 }, limits: { seeds: 20, growing: 10, storage: 30 } } }, lifeinvader: { followers: [] }
                         }
                         inintro.splice(inintro.indexOf(message.author.id), 1)
                     }
@@ -201,54 +261,6 @@ client.on('message', async message => {
                             .setThumbnail("https://github.com/Ugric/lamar-bot-js/blob/main/images/infomation%20icon.png?raw=true")
                             .setImage("https://github.com/Ugric/lamar-bot-js/blob/main/images/dancing%20lamar.gif?raw=true")
                             .setDescription(`To create your profile, do \`${commandprefixadder("create")}\``)
-                    )
-                }
-            })
-        } else {
-            CHandle({
-                message, prefix,
-                commands: {
-                    weed: () => {
-                        message.reply(weedembedrenderer(message, { seeds: 10, growing: [{ time: 0, amount: 10 }], storage: 10 }),
-                            new disbut.MessageActionRow()
-                                .addComponent(
-                                    new disbut.MessageButton()
-                                        .setStyle("blurple")
-                                        .setID("plant")
-                                        .setLabel("🌱 plant")
-                                ).addComponent(
-                                    new disbut.MessageButton()
-                                        .setStyle("blurple")
-                                        .setID("pick")
-                                        .setLabel("✂ pick")
-                                ).addComponent(new disbut.MessageButton()
-                                    .setStyle("blurple")
-                                    .setID("plant")
-                                    .setLabel("💸 sell all")
-                                )
-                        )
-                    },
-                    help: () => {
-                        message.reply(
-                            helpmenu(message)
-                        )
-                    }
-                }
-                , notfound: () => {
-                    message.reply(
-                        new Discord.MessageEmbed()
-                            .setAuthor(
-                                message
-                                    .author
-                                    .tag
-                                , message
-                                    .author
-                                    .avatarURL()
-                            )
-                            .setTitle("command not found!")
-                            .setThumbnail("https://github.com/Ugric/lamar-bot-js/blob/main/images/infomation%20icon.png?raw=true")
-                            .setImage("https://github.com/Ugric/lamar-bot-js/blob/main/images/no%20no%20no.gif?raw=true")
-                            .setDescription(`Do \`${commandprefixadder("help")}\` to get a list of all commands!`)
                     )
                 }
             })
