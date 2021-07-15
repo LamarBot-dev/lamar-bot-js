@@ -12,7 +12,7 @@ const data = AutosaveJSON(__dirname + "/data.json", { users: {} })
 
 const prefix = "l"
 
-const helpmenu = () => new Discord.MessageEmbed().setThumbnail("https://raw.githubusercontent.com/Ugric/lamar-bot-js/main/images/gta5-logo.png?token=AO4PEPHP6SG35LIWYA2DCFDA55XF6").setTitle("HELP MENU")
+const helpmenu = () => new Discord.MessageEmbed().setThumbnail("https://github.com/Ugric/lamar-bot-js/blob/main/images/gta5-logo.png?raw=true").setTitle("HELP MENU")
 
 
 client.on('ready', () => {
