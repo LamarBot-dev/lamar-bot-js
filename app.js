@@ -10,12 +10,12 @@ disbut(client);
 
 const data = AutosaveJSON(__dirname + "/data.json", { users: {} })
 
-const prefix = "l"
+const prefix = "!l"
 
 const commandprefixadder = (command) => `${prefix} ${command}`
 
 const helpmenu = () => new Discord.MessageEmbed().setThumbnail("https://raw.githubusercontent.com/Ugric/lamar-bot-js/main/images/gta5-logo.png").setTitle("HELP MENU")
-    .setDescription("commands:").addFields([{ name: "hi", value: "sup" }])
+    .setDescription("commands:").addFields([{ name: commandprefixadder("weed"), value: "start growing your weed business!" }])
 
 
 client.on('ready', () => {
@@ -25,8 +25,18 @@ client.on('ready', () => {
 client.on('message', async message => {
     try {
         CHandle({
-            message, prefix, notfound: (args) => {
-                message.reply(helpmenu())
+            message, prefix,
+            commands: {
+                weed: () => {
+                    message.reply("hi")
+                },
+                help: () => {
+
+                    message.reply(helpmenu())
+                }
+            }
+            , notfound: (args) => {
+
             }
         })
     } catch { }
