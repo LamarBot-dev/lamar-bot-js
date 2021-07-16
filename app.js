@@ -1,16 +1,11 @@
-const Discord = require("discord.js");
-const client = new Discord.Client();
-const disbut = require("discord-buttons");
+const { Discord, disbut, client } = require("./discordclient");
 const token = require("./token.json");
+const { buttoncontrols, weedstart } = require("./weed");
 const snooze = (milliseconds) =>
   new Promise((resolve) => setTimeout(resolve, milliseconds));
-const { AutosaveJSON } = require("./autosaver");
+const { data } = require("./data");
 const { CHandle } = require("./command-handler");
 disbut(client);
-
-const data = AutosaveJSON(__dirname + "/data.json", { users: {} });
-
-const weedmenu = {};
 
 const inintro = [];
 
@@ -33,32 +28,6 @@ const helpmenu = (message) =>
       },
     ]);
 
-const weedembedrenderer = (author, weed) => {
-  let growingnum = 0;
-  for (const grow of weed.data.growing) {
-    growingnum += grow.amount;
-  }
-  return new Discord.MessageEmbed()
-    .setAuthor(author.tag, author.avatarURL())
-    .setTitle("WEED FARM")
-    .addFields([
-      { name: "SEEDS", value: `${weed.data.seeds} / ${weed.limits.seeds}` },
-      { name: "GROWING", value: `${growingnum} / ${weed.limits.growing}` },
-      {
-        name: "STORAGE",
-        value: `${weed.data.storage} / ${weed.limits.storage}`,
-      },
-    ])
-    .setThumbnail(
-      "https://github.com/Ugric/lamar-bot-js/blob/main/images/weed.png?raw=true&nocache=1"
-    )
-    .setImage(
-      "https://github.com/Ugric/lamar-bot-js/blob/main/images/lamar%20weed%20farm.jpg?raw=true"
-    )
-    .setDescription(`buy and sell weed with the controls at the bottom!`)
-    .setColor("#047000");
-};
-
 client.on("ready", () => {
   console.log(`Logged in as ${client.user.tag}!`);
 });
@@ -66,44 +35,7 @@ client.on("clickButton", async (button) => {
   if (button.clicker.user) {
     button.reply.defer().catch(console.error);
     if (["wbuymax", "wplant", "wpick", "wsellall"].includes(button.id)) {
-      const account = data.current.users[button.clicker.user.id];
-      const business = account.businesses.weed;
-      let growingnum = 0;
-      for (const grow of business.data.growing) {
-        growingnum += grow.amount;
-      }
-      if (button.id == "wbuymax") {
-        const tobuy = business.limits.seeds - business.data.seeds;
-        if (tobuy > 0 && account.money > 0) {
-          if (account.money - tobuy < 0) {
-            business.data.seeds += account.money;
-            account.money = 0;
-          } else {
-            business.data.seeds += tobuy;
-            account.money -= tobuy;
-          }
-          weedmenu[button.clicker.user.id].edit(
-            weedembedrenderer(button.clicker.user, business)
-          );
-        }
-      } else if (button.id == "wplant") {
-        if (business.data.seeds > 0 && growingnum < business.limits.growing) {
-          const maxToPlant = business.limits.growing - growingnum;
-          const toPlant =
-            maxToPlant < business.data.seeds ? maxToPlant : business.data.seeds;
-
-          business.data.seeds -= toPlant;
-          business.data.growing.push({
-            amount: toPlant,
-            time: new Date().getTime(),
-          });
-          weedmenu[button.clicker.user.id].edit(
-            weedembedrenderer(button.clicker.user, business)
-          );
-        }
-      } else if (button.id == "wpick") {
-      } else {
-      }
+      buttoncontrols(data, button);
     } else {
       button.reply
         .send(
@@ -130,42 +62,7 @@ client.on("message", async (message) => {
         message,
         prefix,
         commands: {
-          weed: async () => {
-            if (weedmenu[message.author.id]) {
-              weedmenu[message.author.id].delete().catch(() => {});
-            }
-            weedmenu[message.author.id] = await message.reply(
-              weedembedrenderer(
-                message.author,
-                data.current.users[message.author.id].businesses.weed
-              ),
-              new disbut.MessageActionRow()
-                .addComponent(
-                  new disbut.MessageButton()
-                    .setStyle("blurple")
-                    .setID("wbuymax")
-                    .setLabel("💵 buy max")
-                )
-                .addComponent(
-                  new disbut.MessageButton()
-                    .setStyle("blurple")
-                    .setID("wplant")
-                    .setLabel("🌱 plant")
-                )
-                .addComponent(
-                  new disbut.MessageButton()
-                    .setStyle("blurple")
-                    .setID("wpick")
-                    .setLabel("✂ pick")
-                )
-                .addComponent(
-                  new disbut.MessageButton()
-                    .setStyle("blurple")
-                    .setID("wsellall")
-                    .setLabel("💸 sell all")
-                )
-            );
-          },
+          weed: weedstart,
           help: () => {
             message.reply(helpmenu(message));
           },
