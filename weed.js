@@ -85,6 +85,7 @@ const weedembedrenderer = (author, weed) => {
   return new Discord.MessageEmbed()
     .setAuthor(author.tag, author.avatarURL())
     .setTitle("WEED FARM")
+    .addField("CASH", `$${data.current.users[author.id].money}`)
     .addFields([
       { name: "SEEDS", value: `${weed.data.seeds} / ${weed.limits.seeds}` },
       { name: "GROWING", value: `${growingnum} / ${weed.limits.growing}` },
