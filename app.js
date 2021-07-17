@@ -33,7 +33,17 @@ client.on("ready", () => {
 client.on("clickButton", async (button) => {
   if (button.clicker.user) {
     button.reply.defer().catch(console.error);
-    if (["wbuymax", "wplant", "wpick", "wsellall"].includes(button.id)) {
+    if (
+      [
+        "wbuymax",
+        "wplant",
+        "wpick",
+        "wsellall",
+        "wuseeds",
+        "wugrowing",
+        "wustorage",
+      ].includes(button.id)
+    ) {
       buttoncontrols(data, button);
     } else {
       button.reply

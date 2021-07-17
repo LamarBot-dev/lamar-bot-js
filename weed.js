@@ -1,11 +1,13 @@
 const { Discord, disbut } = require("./discordclient");
 const { data } = require("./data");
 const weedmenu = {};
+const weedupgradesmenu = {};
 
 const buttoncontrols = (data, button) => {
   const account = data.current.users[button.clicker.user.id];
   const business = account.businesses.weed;
   let update = false;
+  let updateupgrades = false;
   const storageLeft = business.limits.storage - business.data.storage;
   let growingnum = 0;
   for (const grow of business.data.growing) {
@@ -38,10 +40,10 @@ const buttoncontrols = (data, button) => {
     }
   } else if (button.id == "wpick") {
     if (growingnum > 0 && storageLeft > 0) {
-      const todel = [];
       let toAdd = 0;
       const currentTime = new Date().getTime();
       for (let i = 0; i < business.data.growing.length; i++) {
+        console.log(currentTime - business.data.growing[i].time);
         if (currentTime - business.data.growing[i].time >= 60000) {
           if (storageLeft - toAdd - business.data.growing[i].amount < 0) {
             business.data.growing[i].amount = -(
@@ -53,26 +55,77 @@ const buttoncontrols = (data, button) => {
             break;
           } else {
             toAdd += business.data.growing[i].amount;
-            todel.push(business.data.growing[i]);
+            business.data.growing[i] = undefined;
           }
         }
       }
-      for (const value in todel) {
-        business.data.growing.splice(business.data.growing.indexOf(value), 1);
-      }
+      business.data.growing = business.data.growing.filter(function (el) {
+        return el != null;
+      });
       business.data.storage += toAdd;
       update = true;
     }
-  } else {
+  } else if (button.id == "wsellall") {
     if (business.data.storage > 0) {
       account.money += business.data.storage * 10;
       business.data.storage = 0;
+      update = true;
+    }
+  } else if (button.id == "wuseeds") {
+    if (account.money - business.limits.seeds * 3 > 0) {
+      account.money -= business.limits.seeds * 3;
+      business.limits.seeds *= 2;
+      updateupgrades = true;
+      update = true;
+    }
+  } else if (button.id == "wugrowing") {
+    if (account.money - business.limits.growing * 3 > 0) {
+      account.money -= business.limits.growing * 3;
+      business.limits.growing *= 2;
+      updateupgrades = true;
+      update = true;
+    }
+  } else {
+    if (account.money - business.limits.storage * 3 > 0) {
+      account.money -= business.limits.storage * 3;
+      business.limits.storage *= 2;
+      updateupgrades = true;
       update = true;
     }
   }
   if (update) {
     weedmenu[button.clicker.user.id].edit(
       weedembedrenderer(button.clicker.user, business)
+    );
+  }
+  if (updateupgrades) {
+    weedupgradesmenu[button.clicker.user.id].edit(
+      new Discord.MessageEmbed()
+        .setTitle("UPGRADES")
+        .addFields([
+          {
+            name: "SEED LIMIT",
+            value: `$${business.limits.seeds * 3} to get ${
+              business.limits.seeds * 2
+            }`,
+          },
+          {
+            name: "GROWING LIMIT",
+            value: `$${business.limits.growing * 3} to get ${
+              business.limits.growing * 2
+            }`,
+          },
+          {
+            name: "STORAGE LIMIT",
+            value: `$${business.limits.storage * 3} to get ${
+              business.limits.storage * 2
+            }`,
+          },
+        ])
+        .setThumbnail(
+          "https://github.com/Ugric/lamar-bot-js/blob/main/images/weed.png?raw=true&nocache=1"
+        )
+        .setColor("#047000")
     );
   }
 };
@@ -85,8 +138,8 @@ const weedembedrenderer = (author, weed) => {
   return new Discord.MessageEmbed()
     .setAuthor(author.tag, author.avatarURL())
     .setTitle("WEED FARM")
-    .addField("CASH", `$${data.current.users[author.id].money}`)
     .addFields([
+      { name: "CASH", value: `$${data.current.users[author.id].money}` },
       { name: "SEEDS", value: `${weed.data.seeds} / ${weed.limits.seeds}` },
       { name: "GROWING", value: `${growingnum} / ${weed.limits.growing}` },
       {
@@ -137,6 +190,65 @@ const weedstart = async ({ message }) => {
           .setStyle("blurple")
           .setID("wsellall")
           .setLabel("💸 sell all storage")
+      )
+  );
+  weedupgradesmenu[message.author.id] = await message.reply(
+    new Discord.MessageEmbed()
+      .setTitle("UPGRADES")
+      .addFields([
+        {
+          name: "SEED LIMIT",
+          value: `$${
+            data.current.users[message.author.id].businesses.weed.limits.seeds *
+            3
+          } to get ${
+            data.current.users[message.author.id].businesses.weed.limits.seeds *
+            2
+          }`,
+        },
+        {
+          name: "GROWING LIMIT",
+          value: `$${
+            data.current.users[message.author.id].businesses.weed.limits
+              .growing * 3
+          } to get ${
+            data.current.users[message.author.id].businesses.weed.limits
+              .growing * 2
+          }`,
+        },
+        {
+          name: "STORAGE LIMIT",
+          value: `$${
+            data.current.users[message.author.id].businesses.weed.limits
+              .storage * 3
+          } to get ${
+            data.current.users[message.author.id].businesses.weed.limits
+              .storage * 2
+          }`,
+        },
+      ])
+      .setThumbnail(
+        "https://github.com/Ugric/lamar-bot-js/blob/main/images/weed.png?raw=true&nocache=1"
+      )
+      .setColor("#047000"),
+    new disbut.MessageActionRow()
+      .addComponent(
+        new disbut.MessageButton()
+          .setStyle("blurple")
+          .setID("wuseeds")
+          .setLabel("UPGRADE SEEDS")
+      )
+      .addComponent(
+        new disbut.MessageButton()
+          .setStyle("blurple")
+          .setID("wugrowing")
+          .setLabel("UPGRADE GROWING")
+      )
+      .addComponent(
+        new disbut.MessageButton()
+          .setStyle("blurple")
+          .setID("wustorage")
+          .setLabel("UPGRADE STORAGE")
       )
   );
 };
