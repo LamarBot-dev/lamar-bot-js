@@ -43,7 +43,6 @@ const buttoncontrols = (data, button) => {
       let toAdd = 0;
       const currentTime = new Date().getTime();
       for (let i = 0; i < business.data.growing.length; i++) {
-        console.log(currentTime - business.data.growing[i].time);
         if (currentTime - business.data.growing[i].time >= 60000) {
           if (storageLeft - toAdd - business.data.growing[i].amount < 0) {
             business.data.growing[i].amount = -(
@@ -140,11 +139,23 @@ const weedembedrenderer = (author, weed) => {
     .setTitle("WEED FARM")
     .addFields([
       { name: "CASH", value: `$${data.current.users[author.id].money}` },
-      { name: "SEEDS", value: `${weed.data.seeds} / ${weed.limits.seeds}` },
-      { name: "GROWING", value: `${growingnum} / ${weed.limits.growing}` },
+      {
+        name: "SEEDS",
+        value: `${weed.data.seeds} / ${weed.limits.seeds} ${Math.floor(
+          (weed.data.seeds / weed.limits.seeds) * 100
+        )}%`,
+      },
+      {
+        name: "GROWING",
+        value: `${growingnum} / ${weed.limits.growing} ${Math.floor(
+          (growingnum / weed.limits.growing) * 100
+        )}%`,
+      },
       {
         name: "STORAGE",
-        value: `${weed.data.storage} / ${weed.limits.storage}`,
+        value: `${weed.data.storage} / ${weed.limits.storage} ${Math.floor(
+          (weed.data.storage / weed.limits.storage) * 100
+        )}%`,
       },
     ])
     .setThumbnail(
@@ -160,6 +171,7 @@ const weedembedrenderer = (author, weed) => {
 const weedstart = async ({ message }) => {
   if (weedmenu[message.author.id]) {
     weedmenu[message.author.id].delete().catch(() => {});
+    weedupgradesmenu[message.author.id].delete().catch(() => {});
   }
   weedmenu[message.author.id] = await message.reply(
     weedembedrenderer(

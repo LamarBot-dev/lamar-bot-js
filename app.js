@@ -2,6 +2,7 @@ const { Discord, disbut, client } = require("./discordclient");
 const token = require("./token.json");
 const { data } = require("./data");
 const { CHandle } = require("./command-handler");
+const { twaat, followplayer } = require("./lifeinvader");
 disbut(client);
 
 // custom games
@@ -72,6 +73,7 @@ client.on("message", async (message) => {
         prefix,
         commands: {
           weed: weedstart,
+          socials: { follow: followplayer, twaat },
           help: () => {
             message.reply(helpmenu(message));
           },
