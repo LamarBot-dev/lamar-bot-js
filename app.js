@@ -13,21 +13,15 @@ const prefix = "!l";
 
 const commandprefixadder = (command) => `${prefix} ${command}`;
 
-const helpmenu = (message) =>
+const helpmenu = (message, title, commands) =>
   new Discord.MessageEmbed()
     .setAuthor(message.author.tag, message.author.avatarURL())
     .setThumbnail(
-      "https://raw.githubusercontent.com/Ugric/lamar-bot-js/main/images/tv%20micheal.gif"
+      "https://github.com/Ugric/lamar-bot-js/blob/main/images/infomation%20icon.png?raw=true"
     )
-    .setTitle("HELP MENU")
+    .setTitle(`HELP MENU${title ? ": " + title : ""}`)
     .setDescription("commands:")
-    .addFields([
-      {
-        name: commandprefixadder("weed"),
-        value: "start growing your weed business!",
-      },
-    ]);
-
+    .addFields(commands);
 client.on("ready", () => {
   console.log(`Logged in as ${client.user.tag}!`);
 });
@@ -73,9 +67,47 @@ client.on("message", async (message) => {
         prefix,
         commands: {
           weed: weedstart,
-          socials: { follow: followplayer, twaat },
+          socials: {
+            follow: followplayer,
+            twaat,
+            help: () => {
+              message.reply(
+                helpmenu(message, "socials", [
+                  {
+                    name: commandprefixadder("socials follow @someone"),
+                    value: "follow @someone on life invader!",
+                  },
+                  {
+                    name: commandprefixadder(
+                      "socials twaat <put your message here>"
+                    ),
+                    value: "twaat to all of your followers!",
+                  },
+                  {
+                    name: commandprefixadder("socials help"),
+                    value: "get this help menu",
+                  },
+                ])
+              );
+            },
+          },
           help: () => {
-            message.reply(helpmenu(message));
+            message.reply(
+              helpmenu(message, undefined, [
+                {
+                  name: commandprefixadder("weed"),
+                  value: "start growing your weed business!",
+                },
+                {
+                  name: commandprefixadder("socials help"),
+                  value: "use life invader!",
+                },
+                {
+                  name: commandprefixadder("help"),
+                  value: "get this help menu",
+                },
+              ])
+            );
           },
         },
         notfound: () => {
