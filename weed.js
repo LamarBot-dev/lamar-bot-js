@@ -1,131 +1,141 @@
 const { Discord, disbut } = require("./discordclient");
 const { data } = require("./data");
+const referencetouser = {};
 const weedmenu = {};
 const weedupgradesmenu = {};
 
-const buttoncontrols = (data, button) => {
-  const account = data.current.users[button.clicker.user.id];
-  const business = account.businesses.weed;
-  let update = false;
-  let updateupgrades = false;
-  const storageLeft = business.limits.storage - business.data.storage;
-  let growingnum = 0;
-  for (const grow of business.data.growing) {
-    growingnum += grow.amount;
-  }
-  if (button.id == "wbuymax") {
-    const tobuy = business.limits.seeds - business.data.seeds;
-    if (tobuy > 0 && account.money > 0) {
-      if (account.money - tobuy < 0) {
-        business.data.seeds += account.money;
-        account.money = 0;
-      } else {
-        business.data.seeds += tobuy;
-        account.money -= tobuy;
-      }
-      update = true;
-    }
-  } else if (button.id == "wplant") {
-    if (business.data.seeds > 0 && growingnum < business.limits.growing) {
-      const maxToPlant = business.limits.growing - growingnum;
-      const toPlant =
-        maxToPlant < business.data.seeds ? maxToPlant : business.data.seeds;
+function numberWithCommas(x) {
+  return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
 
-      business.data.seeds -= toPlant;
-      business.data.growing.push({
-        amount: toPlant,
-        time: new Date().getTime(),
-      });
-      update = true;
+const buttoncontrols = (data, button) => {
+  if (referencetouser[button.message.id] == button.clicker.user.id) {
+    const account = data.current.users[button.clicker.user.id];
+    const business = account.businesses.weed;
+    let update = false;
+    let updateupgrades = false;
+    const storageLeft = business.limits.storage - business.data.storage;
+    let growingnum = 0;
+    for (const grow of business.data.growing) {
+      growingnum += grow.amount;
     }
-  } else if (button.id == "wpick") {
-    if (growingnum > 0 && storageLeft > 0) {
-      let toAdd = 0;
-      const currentTime = new Date().getTime();
-      for (let i = 0; i < business.data.growing.length; i++) {
-        if (currentTime - business.data.growing[i].time >= 60000) {
-          if (storageLeft - toAdd - business.data.growing[i].amount < 0) {
-            business.data.growing[i].amount = -(
-              storageLeft -
-              toAdd -
-              business.data.growing[i].amount
-            );
-            toAdd = storageLeft;
-            break;
-          } else {
-            toAdd += business.data.growing[i].amount;
-            business.data.growing[i] = undefined;
+    if (button.id == "wbuymax") {
+      const tobuy = business.limits.seeds - business.data.seeds;
+      if (tobuy > 0 && account.money > 0) {
+        if (account.money - tobuy < 0) {
+          business.data.seeds += account.money;
+          account.money = 0;
+        } else {
+          business.data.seeds += tobuy;
+          account.money -= tobuy;
+        }
+        update = true;
+      }
+    } else if (button.id == "wplant") {
+      if (business.data.seeds > 0 && growingnum < business.limits.growing) {
+        const maxToPlant = business.limits.growing - growingnum;
+        const toPlant =
+          maxToPlant < business.data.seeds ? maxToPlant : business.data.seeds;
+
+        business.data.seeds -= toPlant;
+        business.data.growing.push({
+          amount: toPlant,
+          time: new Date().getTime(),
+        });
+        update = true;
+      }
+    } else if (button.id == "wpick") {
+      if (growingnum > 0 && storageLeft > 0) {
+        let toAdd = 0;
+        const currentTime = new Date().getTime();
+        for (let i = 0; i < business.data.growing.length; i++) {
+          if (currentTime - business.data.growing[i].time >= 60000) {
+            if (storageLeft - toAdd - business.data.growing[i].amount < 0) {
+              business.data.growing[i].amount = -(
+                storageLeft -
+                toAdd -
+                business.data.growing[i].amount
+              );
+              toAdd = storageLeft;
+              break;
+            } else {
+              toAdd += business.data.growing[i].amount;
+              business.data.growing[i] = undefined;
+            }
           }
         }
+        business.data.growing = business.data.growing.filter(function (el) {
+          return el != null;
+        });
+        business.data.storage += toAdd;
+        update = true;
       }
-      business.data.growing = business.data.growing.filter(function (el) {
-        return el != null;
-      });
-      business.data.storage += toAdd;
-      update = true;
+    } else if (button.id == "wsellall") {
+      if (business.data.storage > 0) {
+        account.money += business.data.storage * 10;
+        business.data.storage = 0;
+        update = true;
+      }
+    } else if (button.id == "wuseeds") {
+      if (account.money - business.limits.seeds * 3 > 0) {
+        account.money -= business.limits.seeds * 3;
+        business.limits.seeds *= 2;
+        updateupgrades = true;
+        update = true;
+      }
+    } else if (button.id == "wugrowing") {
+      if (account.money - business.limits.growing * 3 > 0) {
+        account.money -= business.limits.growing * 3;
+        business.limits.growing *= 2;
+        updateupgrades = true;
+        update = true;
+      }
+    } else {
+      if (account.money - business.limits.storage * 3 > 0) {
+        account.money -= business.limits.storage * 3;
+        business.limits.storage *= 2;
+        updateupgrades = true;
+        update = true;
+      }
     }
-  } else if (button.id == "wsellall") {
-    if (business.data.storage > 0) {
-      account.money += business.data.storage * 10;
-      business.data.storage = 0;
-      update = true;
+    if (update) {
+      weedmenu[button.clicker.user.id].edit(
+        weedembedrenderer(button.clicker.user, business)
+      );
     }
-  } else if (button.id == "wuseeds") {
-    if (account.money - business.limits.seeds * 3 > 0) {
-      account.money -= business.limits.seeds * 3;
-      business.limits.seeds *= 2;
-      updateupgrades = true;
-      update = true;
+    if (updateupgrades) {
+      weedupgradesmenu[button.clicker.user.id].edit(
+        new Discord.MessageEmbed()
+          .setTitle("UPGRADES")
+          .addFields([
+            {
+              name: "SEED LIMIT",
+              value: `$${numberWithCommas(
+                business.limits.seeds * 3
+              )} to get ${numberWithCommas(business.limits.seeds * 2)}`,
+            },
+            {
+              name: "GROWING LIMIT",
+              value: `$${numberWithCommas(
+                business.limits.growing * 3
+              )} to get ${numberWithCommas(business.limits.growing * 2)}`,
+            },
+            {
+              name: "STORAGE LIMIT",
+              value: `$${numberWithCommas(
+                business.limits.storage * 3
+              )} to get ${numberWithCommas(business.limits.storage * 2)}`,
+            },
+          ])
+          .setThumbnail(
+            "https://github.com/Ugric/lamar-bot-js/blob/main/images/weed.png?raw=true&nocache=1"
+          )
+          .setImage(
+            "https://github.com/Ugric/lamar-bot-js/blob/main/images/smoke%20on%20the%20water.png?raw=true"
+          )
+          .setColor("#047000")
+      );
     }
-  } else if (button.id == "wugrowing") {
-    if (account.money - business.limits.growing * 3 > 0) {
-      account.money -= business.limits.growing * 3;
-      business.limits.growing *= 2;
-      updateupgrades = true;
-      update = true;
-    }
-  } else {
-    if (account.money - business.limits.storage * 3 > 0) {
-      account.money -= business.limits.storage * 3;
-      business.limits.storage *= 2;
-      updateupgrades = true;
-      update = true;
-    }
-  }
-  if (update) {
-    weedmenu[button.clicker.user.id].edit(
-      weedembedrenderer(button.clicker.user, business)
-    );
-  }
-  if (updateupgrades) {
-    weedupgradesmenu[button.clicker.user.id].edit(
-      new Discord.MessageEmbed()
-        .setTitle("UPGRADES")
-        .addFields([
-          {
-            name: "SEED LIMIT",
-            value: `$${business.limits.seeds * 3} to get ${
-              business.limits.seeds * 2
-            }`,
-          },
-          {
-            name: "GROWING LIMIT",
-            value: `$${business.limits.growing * 3} to get ${
-              business.limits.growing * 2
-            }`,
-          },
-          {
-            name: "STORAGE LIMIT",
-            value: `$${business.limits.storage * 3} to get ${
-              business.limits.storage * 2
-            }`,
-          },
-        ])
-        .setThumbnail(
-          "https://github.com/Ugric/lamar-bot-js/blob/main/images/weed.png?raw=true&nocache=1"
-        )
-        .setColor("#047000")
-    );
   }
 };
 
@@ -138,24 +148,27 @@ const weedembedrenderer = (author, weed) => {
     .setAuthor(author.tag, author.avatarURL())
     .setTitle("WEED FARM")
     .addFields([
-      { name: "CASH", value: `$${data.current.users[author.id].money}` },
+      {
+        name: "CASH",
+        value: `$${numberWithCommas(data.current.users[author.id].money)}`,
+      },
       {
         name: "SEEDS",
-        value: `${weed.data.seeds} / ${weed.limits.seeds} ${Math.floor(
-          (weed.data.seeds / weed.limits.seeds) * 100
-        )}%`,
+        value: `${numberWithCommas(weed.data.seeds)} / ${numberWithCommas(
+          weed.limits.seeds
+        )} ${Math.floor((weed.data.seeds / weed.limits.seeds) * 100)}%`,
       },
       {
         name: "GROWING",
-        value: `${growingnum} / ${weed.limits.growing} ${Math.floor(
-          (growingnum / weed.limits.growing) * 100
-        )}%`,
+        value: `${numberWithCommas(growingnum)} / ${numberWithCommas(
+          weed.limits.growing
+        )} ${Math.floor((growingnum / weed.limits.growing) * 100)}%`,
       },
       {
         name: "STORAGE",
-        value: `${weed.data.storage} / ${weed.limits.storage} ${Math.floor(
-          (weed.data.storage / weed.limits.storage) * 100
-        )}%`,
+        value: `${numberWithCommas(weed.data.storage)} / ${numberWithCommas(
+          weed.limits.storage
+        )} ${Math.floor((weed.data.storage / weed.limits.storage) * 100)}%`,
       },
     ])
     .setThumbnail(
@@ -210,39 +223,42 @@ const weedstart = async ({ message }) => {
       .addFields([
         {
           name: "SEED LIMIT",
-          value: `$${
+          value: `$${numberWithCommas(
             data.current.users[message.author.id].businesses.weed.limits.seeds *
-            3
-          } to get ${
+              3
+          )} to get ${numberWithCommas(
             data.current.users[message.author.id].businesses.weed.limits.seeds *
-            2
-          }`,
+              2
+          )}`,
         },
         {
           name: "GROWING LIMIT",
-          value: `$${
+          value: `$${numberWithCommas(
             data.current.users[message.author.id].businesses.weed.limits
               .growing * 3
-          } to get ${
+          )} to get ${numberWithCommas(
             data.current.users[message.author.id].businesses.weed.limits
               .growing * 2
-          }`,
+          )}`,
         },
         {
           name: "STORAGE LIMIT",
-          value: `$${
+          value: `$${numberWithCommas(
             data.current.users[message.author.id].businesses.weed.limits
               .storage * 3
-          } to get ${
+          )} to get ${numberWithCommas(
             data.current.users[message.author.id].businesses.weed.limits
               .storage * 2
-          }`,
+          )}`,
         },
       ])
       .setThumbnail(
         "https://github.com/Ugric/lamar-bot-js/blob/main/images/weed.png?raw=true&nocache=1"
       )
-      .setColor("#047000"),
+      .setColor("#047000")
+      .setImage(
+        "https://github.com/Ugric/lamar-bot-js/blob/main/images/smoke%20on%20the%20water.png?raw=true"
+      ),
     new disbut.MessageActionRow()
       .addComponent(
         new disbut.MessageButton()
@@ -263,5 +279,7 @@ const weedstart = async ({ message }) => {
           .setLabel("UPGRADE STORAGE")
       )
   );
+  referencetouser[weedmenu[message.author.id].id] = message.author.id;
+  referencetouser[weedupgradesmenu[message.author.id].id] = message.author.id;
 };
 module.exports = { buttoncontrols, weedmenu, weedstart };
