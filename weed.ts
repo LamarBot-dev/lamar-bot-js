@@ -37,9 +37,8 @@ function numberWithCommas(x: number) {
 }
 
 const buttoncontrols: buttonControlsFunction = (data, button) => {
-    if (
-        button.message?.member?.id &&
-        referencetouser[button.message.member.id] == button.user.id
+    if (button.message &&
+        referencetouser[button.message.id] == button.user.id
     ) {
         const account = data.current.users[button.user.id];
         const business = account.businesses.weed;
@@ -50,7 +49,7 @@ const buttoncontrols: buttonControlsFunction = (data, button) => {
         for (const grow of business.data.growing) {
             growingnum += grow.amount;
         }
-        if (button.id == "wbuymax") {
+        if (button.customId == "wbuymax") {
             const tobuy = business.limits.seeds - business.data.seeds;
             if (tobuy > 0 && account.money > 0) {
                 if (account.money - tobuy < 0) {
@@ -62,7 +61,7 @@ const buttoncontrols: buttonControlsFunction = (data, button) => {
                 }
                 update = true;
             }
-        } else if (button.id == "wplant") {
+        } else if (button.customId == "wplant") {
             if (
                 business.data.seeds > 0 &&
                 growingnum < business.limits.growing
@@ -80,7 +79,7 @@ const buttoncontrols: buttonControlsFunction = (data, button) => {
                 });
                 update = true;
             }
-        } else if (button.id == "wpick") {
+        } else if (button.customId == "wpick") {
             if (growingnum > 0 && storageLeft > 0) {
                 let toAdd = 0;
                 const currentTime = new Date().getTime();
@@ -116,20 +115,20 @@ const buttoncontrols: buttonControlsFunction = (data, button) => {
                 business.data.storage += toAdd;
                 update = true;
             }
-        } else if (button.id == "wsellall") {
+        } else if (button.customId == "wsellall") {
             if (business.data.storage > 0) {
                 account.money += business.data.storage * 10;
                 business.data.storage = 0;
                 update = true;
             }
-        } else if (button.id == "wuseeds") {
+        } else if (button.customId == "wuseeds") {
             if (account.money - business.limits.seeds * 3 > 0) {
                 account.money -= business.limits.seeds * 3;
                 business.limits.seeds *= 2;
                 updateupgrades = true;
                 update = true;
             }
-        } else if (button.id == "wugrowing") {
+        } else if (button.customId == "wugrowing") {
             if (account.money - business.limits.growing * 3 > 0) {
                 account.money -= business.limits.growing * 3;
                 business.limits.growing *= 2;

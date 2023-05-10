@@ -31,12 +31,11 @@ const helpmenu = (
 client.on("ready", () => {
     console.log(`Logged in as ${client.user?.tag}!`);
 });
-client.on("collect", async (button: Discord.CollectedInteraction) => {
-    console.log(button)
+client.on("interactionCreate", async (button) => {
     if (button.type !== Discord.InteractionType.MessageComponent) return;
 
     if (button.member?.user) {
-        button.deferReply().catch(console.error);
+        button.deferUpdate().catch(console.error);
         if (weedButtonIDs.includes(button.customId)) {
             buttoncontrols(data, button);
         } else {
@@ -60,7 +59,7 @@ client.on("collect", async (button: Discord.CollectedInteraction) => {
                 .catch(console.error);
         }
     } else {
-        button.deferReply().catch(console.error);
+        button.deferUpdate().catch(console.error);
     }
 });
 client.on("messageCreate", async (message) => {
