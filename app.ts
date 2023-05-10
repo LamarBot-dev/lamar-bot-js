@@ -1,8 +1,8 @@
 import { client, Discord } from "./discordclient";
-import * as token from "./token.json";
+import token from "./token.json";
 import { CHandle } from "./command-handler";
 import { twaat, followplayer } from "./lifeinvader";
-import { data } from "./data";
+import data from "./data";
 
 // custom games
 import { buttoncontrols, weedButtonIDs, weedstart } from "./weed";
@@ -10,44 +10,53 @@ import { intro } from "./intromenu";
 
 const prefix = "!l";
 
-const commandprefixadder = (command) => `${prefix} ${command}`;
+const commandprefixadder = (command: string) => `${prefix} ${command}`;
 
-const helpmenu = (message, title, commands) =>
-    new Discord.MessageEmbed()
-        .setAuthor(message.author.tag, message.author.avatarURL())
+const helpmenu = (
+    message: Discord.Message,
+    title: string | undefined,
+    commands: Discord.RestOrArray<Discord.APIEmbedField>
+) =>
+    new Discord.EmbedBuilder()
+        .setAuthor({
+            name: message.author.tag,
+            iconURL: message.author.avatarURL() || undefined,
+        })
         .setThumbnail(
             "https://github.com/Ugric/lamar-bot-js/blob/main/images/infomation%20icon.png?raw=true"
         )
         .setTitle(`HELP MENU${title ? ": " + title : ""}`)
         .setDescription("commands:")
-        .addFields(commands);
+        .addFields(...commands);
 client.on("ready", () => {
-    console.log(`Logged in as ${client.user.tag}!`);
+    console.log(`Logged in as ${client.user?.tag}!`);
 });
 client.on("collect", async (button: Discord.CollectedInteraction) => {
+    console.log(button)
     if (button.type !== Discord.InteractionType.MessageComponent) return;
 
     if (button.member?.user) {
         button.deferReply().catch(console.error);
-        if (
-            weedButtonIDs.includes(button.customId)
-        ) {
+        if (weedButtonIDs.includes(button.customId)) {
             buttoncontrols(data, button);
         } else {
-            button.reply(
-                    new Discord.MessageEmbed()
-                        .setAuthor(
-                            button.clicker.user.tag,
-                            button.clicker.user.avatarURL()
-                        )
-                        .setTitle("unknown button!")
-                        .setThumbnail(
-                            "https://github.com/Ugric/lamar-bot-js/blob/main/images/infomation%20icon.png?raw=true"
-                        )
-                        .setImage(
-                            "https://github.com/Ugric/lamar-bot-js/blob/main/images/no%20no%20no.gif?raw=true"
-                        )
-                )
+            button
+                .reply({
+                    embeds: [
+                        new Discord.EmbedBuilder()
+                            .setAuthor({
+                                name: button.user.tag,
+                                iconURL: button.user.avatarURL() || undefined,
+                            })
+                            .setTitle("unknown button!")
+                            .setThumbnail(
+                                "https://github.com/Ugric/lamar-bot-js/blob/main/images/infomation%20icon.png?raw=true"
+                            )
+                            .setImage(
+                                "https://github.com/Ugric/lamar-bot-js/blob/main/images/no%20no%20no.gif?raw=true"
+                            ),
+                    ],
+                })
                 .catch(console.error);
         }
     } else {
@@ -65,67 +74,76 @@ client.on("messageCreate", async (message) => {
                     follow: followplayer,
                     twaat,
                     help: () => {
-                        message.reply(
-                            helpmenu(message, "socials", [
-                                {
-                                    name: commandprefixadder(
-                                        "socials follow @someone"
-                                    ),
-                                    value: "follow @someone on life invader!",
-                                },
-                                {
-                                    name: commandprefixadder(
-                                        "socials twaat <put your message here>"
-                                    ),
-                                    value: "twaat to all of your followers!",
-                                },
-                                {
-                                    name: commandprefixadder("socials help"),
-                                    value: "get this help menu",
-                                },
-                            ])
-                        );
+                        message.reply({
+                            embeds: [
+                                helpmenu(message, "socials", [
+                                    {
+                                        name: commandprefixadder(
+                                            "socials follow @someone"
+                                        ),
+                                        value: "follow @someone on life invader!",
+                                    },
+                                    {
+                                        name: commandprefixadder(
+                                            "socials twaat <put your message here>"
+                                        ),
+                                        value: "twaat to all of your followers!",
+                                    },
+                                    {
+                                        name: commandprefixadder(
+                                            "socials help"
+                                        ),
+                                        value: "get this help menu",
+                                    },
+                                ]),
+                            ],
+                        });
                     },
                 },
                 help: () => {
-                    message.reply(
-                        helpmenu(message, undefined, [
-                            {
-                                name: commandprefixadder("weed"),
-                                value: "start growing your weed business!",
-                            },
-                            {
-                                name: commandprefixadder("socials help"),
-                                value: "use life invader!",
-                            },
-                            {
-                                name: commandprefixadder("help"),
-                                value: "get this help menu",
-                            },
-                        ])
-                    );
+                    message.reply({
+                        embeds: [
+                            helpmenu(message, undefined, [
+                                {
+                                    name: commandprefixadder("weed"),
+                                    value: "start growing your weed business!",
+                                },
+                                {
+                                    name: commandprefixadder("socials help"),
+                                    value: "use life invader!",
+                                },
+                                {
+                                    name: commandprefixadder("help"),
+                                    value: "get this help menu",
+                                },
+                            ]),
+                        ],
+                    });
                 },
             },
             notfound: () => {
-                message.reply(
-                    new Discord.MessageEmbed()
-                        .setAuthor(
-                            message.author.tag,
-                            message.author.avatarURL()
-                        )
-                        .setTitle("command not found!")
-                        .setThumbnail(
-                            "https://github.com/Ugric/lamar-bot-js/blob/main/images/infomation%20icon.png?raw=true"
-                        )
-                        .setImage(
-                            "https://github.com/Ugric/lamar-bot-js/blob/main/images/no%20no%20no.gif?raw=true"
-                        )
-                        .setDescription(
-                            `Do \`${commandprefixadder(
-                                "help"
-                            )}\` to get a list of all commands!`
-                        )
-                );
+                message.reply({
+                    embeds: [
+                        new Discord.EmbedBuilder()
+                            .setAuthor({
+                                name: message.author.tag,
+                                iconURL:
+                                    message.author.avatarURL() || undefined,
+                            })
+                            .setTitle("command not found!")
+                            .setThumbnail(
+                                "https://github.com/Ugric/lamar-bot-js/blob/main/images/infomation%20icon.png?raw=true"
+                            )
+                            .setImage(
+                                "https://github.com/Ugric/lamar-bot-js/blob/main/images/no%20no%20no.gif?raw=true"
+                            )
+                            .setDescription(
+                                `Do \`${commandprefixadder(
+                                    "help"
+                                )}\` to get a list of all commands!`
+                            ),
+                    ],
+                });
             },
         });
     } else {
@@ -136,25 +154,28 @@ client.on("messageCreate", async (message) => {
                 create: intro,
             },
             notfound: () => {
-                message.reply(
-                    new Discord.MessageEmbed()
-                        .setAuthor(
-                            message.author.tag,
-                            message.author.avatarURL()
-                        )
-                        .setTitle("command not found!")
-                        .setThumbnail(
-                            "https://github.com/Ugric/lamar-bot-js/blob/main/images/infomation%20icon.png?raw=true"
-                        )
-                        .setImage(
-                            "https://github.com/Ugric/lamar-bot-js/blob/main/images/dancing%20lamar.gif?raw=true"
-                        )
-                        .setDescription(
-                            `To create your profile, do \`${commandprefixadder(
-                                "create"
-                            )}\``
-                        )
-                );
+                message.reply({
+                    embeds: [
+                        new Discord.EmbedBuilder()
+                            .setAuthor({
+                                name: message.author.tag,
+                                iconURL:
+                                    message.author.avatarURL() || undefined,
+                            })
+                            .setTitle("command not found!")
+                            .setThumbnail(
+                                "https://github.com/Ugric/lamar-bot-js/blob/main/images/infomation%20icon.png?raw=true"
+                            )
+                            .setImage(
+                                "https://github.com/Ugric/lamar-bot-js/blob/main/images/dancing%20lamar.gif?raw=true"
+                            )
+                            .setDescription(
+                                `To create your profile, do \`${commandprefixadder(
+                                    "create"
+                                )}\``
+                            ),
+                    ],
+                });
             },
         });
     }

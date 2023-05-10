@@ -1,7 +1,7 @@
 import { buttonControlsFunction } from "./buttonControls";
 import { commandFunctionType } from "./command-handler";
 import { Discord } from "./discordclient";
-const { data } = require("./data");
+import data from "./data";
 const referencetouser: Record<string, string> = {};
 const weedmenu: Record<string, Discord.Message<boolean>> = {};
 const weedupgradesmenu: Record<string, Discord.Message<boolean>> = {};

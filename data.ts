@@ -1,7 +1,6 @@
 import { AutosaveJSON } from "./autosaver";
 import { weedBusiness } from "./weed";
 
-
 type SHAPE = {
     users: {
         [key: string]: {
@@ -19,7 +18,7 @@ type SHAPE = {
 const DEFAULT = {
     users: {}
 }
-
-export const data = AutosaveJSON<SHAPE>(__dirname + "/data.json", DEFAULT);
+const data = AutosaveJSON<SHAPE>(__dirname + "/db.json", DEFAULT);
+export default data
 type storedData = typeof data;
 export type { storedData };

@@ -1,5 +1,5 @@
 import { commandFunctionType } from "./command-handler";
-import { data } from "./data";
+import data from "./data";
 import { Discord, client } from "./discordclient";
 import { getuserfrommention } from "./getuserfrommention";
 
@@ -95,7 +95,7 @@ const followplayer: commandFunctionType = async ({ args, message }) => {
                 embeds: [
                     new Discord.EmbedBuilder()
                         .setTitle("OH NO!")
-                        .setDescription("you can't follow yourself, sado!")
+                        .setDescription("you can't follow yourself, sad person!")
                         .setThumbnail(
                             "https://github.com/Ugric/lamar-bot-js/blob/main/images/life%20invader%20small.png?raw=true"
                         ),

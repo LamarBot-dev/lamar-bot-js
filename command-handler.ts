@@ -33,7 +33,7 @@ export const CHandle = async ({
         message: Discord.Message;
         prefix: string;
         commands: commandType;
-        options: { allowbots: boolean };
+        options?: { allowbots: boolean };
         notfound: (args: string[]) => void;
     }): Promise<number> => {
         if (
@@ -53,11 +53,12 @@ export const CHandle = async ({
         let commandpart: innerCommandType = commands;
         for (let index = 0; index < args.length; index++) {
             const command = args[index];
-            if (command in commandpart) {
-                if (typeof commandpart == "function") {
-                    commandpart({
+            console.log(command, commandpart, command in commandpart);
+            if (command in commandpart && typeof commandpart == "object") {
+                if (typeof commandpart[command] == "function") {
+                    (commandpart[command] as any)({
                         message,
-                        args: args.slice(index, args.length),
+                        args: args.slice(index+1, args.length),
                     });
                     return 1;
                 } else {
