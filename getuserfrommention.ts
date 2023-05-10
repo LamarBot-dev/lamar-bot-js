@@ -1,10 +1,10 @@
 const { client } = require("./discordclient");
 
-function getuserfrommention(mention) {
+function getuserfrommention(mention: string) {
   const matches = mention.match(/^<@!?(\d+)>$/);
   if (!matches) return;
   const id = matches[1];
   return id;
 }
 
-module.exports = { getuserfrommention };
+export { getuserfrommention };

@@ -1,3 +1,3 @@
-const snooze = (milliseconds) =>
+const snooze = (milliseconds: number) =>
   new Promise((resolve) => setTimeout(resolve, milliseconds));
-module.exports = { snooze };
+export { snooze };
