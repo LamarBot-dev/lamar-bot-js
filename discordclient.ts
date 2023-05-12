@@ -13,7 +13,7 @@ const client = new Discord.Client({
         GatewayIntentBits.GuildMessageTyping,
     ],
     partials: [
-        Partials.Channel, // Required to receive DMs
+        Partials.Channel,
         Partials.GuildMember,
         Partials.Message,
         Partials.Reaction,
