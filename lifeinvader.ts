@@ -1,29 +1,15 @@
 import { commandFunctionType } from "./command-handler";
-import data from "./data";
 import { Discord, client } from "./discordclient";
 import { getuserfrommention } from "./getuserfrommention";
 
 const followplayer: commandFunctionType = async ({ args, message }) => {
-    if (!args[0])
-        return await message.channel.send({
-            embeds: [
-                new Discord.EmbedBuilder()
-                    .setTitle("OH NO!")
-                    .setDescription("add a mention!")
-                    .setThumbnail(
-                        "https://github.com/Ugric/lamar-bot-js/blob/main/images/infomation%20icon.png?raw=true"
-                    ),
-            ],
-        });
-    const mentionid = getuserfrommention(args[0]);
+    const mentionid = getuserfrommention(String(args[0].value));
     if (mentionid) {
-        if (mentionid != message.author.id) {
+        if (mentionid != message.user.id) {
             if (data.current.users[mentionid]) {
                 const account = data.current.users[mentionid];
-                if (
-                    !account.lifeinvader.followers.includes(message.author.id)
-                ) {
-                    account.lifeinvader.followers.push(message.author.id);
+                if (!account.lifeinvader.followers.includes(message.user.id)) {
+                    account.lifeinvader.followers.push(message.user.id);
                     client.users
                         .fetch(mentionid)
                         .then((user) => {
@@ -31,9 +17,9 @@ const followplayer: commandFunctionType = async ({ args, message }) => {
                                 embeds: [
                                     new Discord.EmbedBuilder()
                                         .setAuthor({
-                                            name: message.author.tag,
+                                            name: message.user.tag,
                                             iconURL:
-                                                message.author.avatarURL() ||
+                                                message.user.avatarURL() ||
                                                 undefined,
                                         })
                                         .setTitle("New Follower!")
@@ -41,7 +27,7 @@ const followplayer: commandFunctionType = async ({ args, message }) => {
                                             "https://github.com/Ugric/lamar-bot-js/blob/main/images/life%20invader%20small.png?raw=true"
                                         )
                                         .setDescription(
-                                            `${message.author.tag} just followed you, you now have ${account.lifeinvader.followers.length} followers!`
+                                            `${message.user.tag} just followed you, you now have ${account.lifeinvader.followers.length} followers!`
                                         )
                                         .setTimestamp(new Date().getTime()),
                                 ],
@@ -54,7 +40,7 @@ const followplayer: commandFunctionType = async ({ args, message }) => {
                                 .catch(console.error);
                         })
                         .catch(console.error);
-                    await message.channel.send({
+                    await message.reply({
                         embeds: [
                             new Discord.EmbedBuilder()
                                 .setTitle("YAY!")
@@ -65,7 +51,7 @@ const followplayer: commandFunctionType = async ({ args, message }) => {
                         ],
                     });
                 } else {
-                    await message.channel.send({
+                    await message.reply({
                         embeds: [
                             new Discord.EmbedBuilder()
                                 .setTitle("OH NO!")
@@ -77,7 +63,7 @@ const followplayer: commandFunctionType = async ({ args, message }) => {
                     });
                 }
             } else {
-                await message.channel.send({
+                await message.reply({
                     embeds: [
                         new Discord.EmbedBuilder()
                             .setTitle("OH NO!")
@@ -91,11 +77,13 @@ const followplayer: commandFunctionType = async ({ args, message }) => {
                 });
             }
         } else {
-            await message.channel.send({
+            await message.reply({
                 embeds: [
                     new Discord.EmbedBuilder()
                         .setTitle("OH NO!")
-                        .setDescription("you can't follow yourself, sad person!")
+                        .setDescription(
+                            "you can't follow yourself, sad person!"
+                        )
                         .setThumbnail(
                             "https://github.com/Ugric/lamar-bot-js/blob/main/images/life%20invader%20small.png?raw=true"
                         ),
@@ -103,7 +91,7 @@ const followplayer: commandFunctionType = async ({ args, message }) => {
             });
         }
     } else {
-        await message.channel.send({
+        await message.reply({
             embeds: [
                 new Discord.EmbedBuilder()
                     .setTitle("OH NO!")
@@ -119,8 +107,8 @@ const followplayer: commandFunctionType = async ({ args, message }) => {
 const twaat: commandFunctionType = async ({ args, message }) => {
     const twaatembed = new Discord.EmbedBuilder()
         .setAuthor({
-            name: message.author.tag,
-            iconURL: message.author.avatarURL()||undefined,
+            name: message.user.tag,
+            iconURL: message.user.avatarURL()||undefined,
         })
         .setTitle("New Twaat!")
         .setThumbnail(
@@ -128,8 +116,8 @@ const twaat: commandFunctionType = async ({ args, message }) => {
         )
         .setDescription(args.join(" "))
         .setTimestamp(new Date().getTime());
-    message.author.send({ content: "twaat sent!", embeds: [twaatembed] });
-    const account = data.current.users[message.author.id];
+    message.user.send({ content: "twaat sent!", embeds: [twaatembed] });
+    const account = data.current.users[message.user.id];
     for (const userid of account.lifeinvader.followers) {
         client.users
             .fetch(userid)

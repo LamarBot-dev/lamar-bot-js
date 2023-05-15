@@ -1,18 +1,17 @@
 import { Discord } from "./discordclient";
 import { snooze } from "./snooze";
-import data from "./data";
 import { commandFunctionType } from "./command-handler";
 
 const inintro: string[] = [];
 export const intro: commandFunctionType = async ({ message }) => {
-    if (inintro.includes(message.author.id)) return;
-    inintro.push(message.author.id);
-    await message.author.send({
+    if (inintro.includes(message.user.id)) return;
+    inintro.push(message.user.id);
+    await message.user.send({
         embeds: [
             new Discord.EmbedBuilder()
                 .setAuthor({
-                    name: message.author.tag,
-                    iconURL: message.author.avatarURL() || undefined,
+                    name: message.user.tag,
+                    iconURL: message.user.avatarURL() || undefined,
                 })
                 .setThumbnail(
                     "https://github.com/Ugric/lamar-bot-js/blob/main/images/infomation%20icon.png?raw=true"
@@ -21,21 +20,21 @@ export const intro: commandFunctionType = async ({ message }) => {
                     "https://github.com/Ugric/lamar-bot-js/blob/main/images/tv%20micheal.gif?raw=true"
                 )
                 .setDescription(
-                    `Hello ${message.author.username}, and welcome to the Lamar Bot experience!`
+                    `Hello ${message.user.username}, and welcome to the Lamar Bot experience!`
                 ),
         ],
     });
     await snooze(5000);
-    await message.author.send({
+    await message.user.send({
         embeds: [
             new Discord.EmbedBuilder()
-                .setTitle(`${message.author.username}'s IFruit`)
+                .setTitle(`${message.user.username}'s IFruit`)
                 .setThumbnail(
                     "https://github.com/Ugric/lamar-bot-js/blob/main/images/ifruit.png?raw=true"
                 ),
         ],
     });
-    let typingmessage = await message.author.send({
+    let typingmessage = await message.user.send({
         embeds: [
             new Discord.EmbedBuilder().setDescription(`UNKNOWN is typing...`),
         ],
@@ -55,7 +54,7 @@ export const intro: commandFunctionType = async ({ message }) => {
         ],
     });
     await snooze(2500);
-    typingmessage = await message.author.send({
+    typingmessage = await message.user.send({
         embeds: [
             new Discord.EmbedBuilder().setDescription(`UNKNOWN is typing...`),
         ],
@@ -69,7 +68,7 @@ export const intro: commandFunctionType = async ({ message }) => {
         ],
     });
     await snooze(2500);
-    typingmessage = await message.author.send({
+    typingmessage = await message.user.send({
         embeds: [
             new Discord.EmbedBuilder().setDescription(`you are typing...`),
         ],
@@ -79,14 +78,14 @@ export const intro: commandFunctionType = async ({ message }) => {
         embeds: [
             new Discord.EmbedBuilder()
                 .setAuthor({
-                    name: message.author.tag,
-                    iconURL: message.author.avatarURL() || undefined,
+                    name: message.user.tag,
+                    iconURL: message.user.avatarURL() || undefined,
                 })
                 .setDescription(`Yeah thats me.`),
         ],
     });
     await snooze(2500);
-    typingmessage = await message.author.send({
+    typingmessage = await message.user.send({
         embeds: [
             new Discord.EmbedBuilder().setDescription(`UNKNOWN is typing...`),
         ],
@@ -106,7 +105,7 @@ export const intro: commandFunctionType = async ({ message }) => {
         ],
     });
     await snooze(3000);
-    await message.author.send({
+    await message.user.send({
         embeds: [
             new Discord.EmbedBuilder()
                 .setTitle("Lamar")
@@ -117,12 +116,12 @@ export const intro: commandFunctionType = async ({ message }) => {
         ],
     });
     await snooze(5000);
-    await message.author.send({
+    await message.user.send({
         embeds: [
             new Discord.EmbedBuilder()
                 .setAuthor({
-                    name: message.author.tag,
-                    iconURL: message.author.avatarURL() || undefined,
+                    name: message.user.tag,
+                    iconURL: message.user.avatarURL() || undefined,
                 })
                 .setThumbnail(
                     "https://github.com/Ugric/lamar-bot-js/blob/main/images/infomation%20icon.png?raw=true"
@@ -134,12 +133,12 @@ export const intro: commandFunctionType = async ({ message }) => {
         ],
     });
     await snooze(5000);
-    await message.author.send({
+    await message.user.send({
         embeds: [
             new Discord.EmbedBuilder()
                 .setAuthor({
-                    name: message.author.tag,
-                    iconURL: message.author.avatarURL() || undefined,
+                    name: message.user.tag,
+                    iconURL: message.user.avatarURL() || undefined,
                 })
                 .setThumbnail(
                     "https://github.com/Ugric/lamar-bot-js/blob/main/images/infomation%20icon.png?raw=true"
@@ -153,12 +152,12 @@ export const intro: commandFunctionType = async ({ message }) => {
         ],
     });
     await snooze(5000);
-    await message.author.send({
+    await message.user.send({
         embeds: [
             new Discord.EmbedBuilder()
                 .setAuthor({
-                    name: message.author.tag,
-                    iconURL: message.author.avatarURL() || undefined,
+                    name: message.user.tag,
+                    iconURL: message.user.avatarURL() || undefined,
                 })
                 .setThumbnail(
                     "https://github.com/Ugric/lamar-bot-js/blob/main/images/infomation%20icon.png?raw=true"
@@ -172,12 +171,12 @@ export const intro: commandFunctionType = async ({ message }) => {
         ],
     });
     await snooze(5000);
-    await message.author.send({
+    await message.user.send({
         embeds: [
             new Discord.EmbedBuilder()
                 .setAuthor({
-                    name: message.author.tag,
-                    iconURL: message.author.avatarURL() || undefined,
+                    name: message.user.tag,
+                    iconURL: message.user.avatarURL() || undefined,
                 })
                 .setThumbnail(
                     "https://github.com/Ugric/lamar-bot-js/blob/main/images/infomation%20icon.png?raw=true"
@@ -188,15 +187,6 @@ export const intro: commandFunctionType = async ({ message }) => {
                 .setDescription(`Have fun!`),
         ],
     });
-    data.current.users[message.author.id] = {
-        money: 10,
-        businesses: {
-            weed: {
-                data: { seeds: 0, growing: [], storage: 0 },
-                limits: { seeds: 20, growing: 10, storage: 30 },
-            },
-        },
-        lifeinvader: { followers: [] },
-    };
-    inintro.splice(inintro.indexOf(message.author.id), 1);
+    // create a new user in the database
+    inintro.splice(inintro.indexOf(message.user.id), 1);
 };
