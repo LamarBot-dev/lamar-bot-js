@@ -1,10 +1,12 @@
 import { buttonControlsFunction } from "./buttonControls";
 import { commandFunctionType } from "./command-handler";
 import { Discord } from "./discordclient";
-import data from "./data";
 const referencetouser: Record<string, string> = {};
-const weedmenu: Record<string, Discord.Message<boolean>> = {};
-const weedupgradesmenu: Record<string, Discord.Message<boolean>> = {};
+const weedmenu: Record<string, Discord.InteractionResponse<boolean>> = {};
+const weedupgradesmenu: Record<
+    string,
+    Discord.InteractionResponse<boolean>
+> = {};
 
 const weedButtonIDs = [
     "wbuymax",
@@ -36,7 +38,7 @@ function numberWithCommas(x: number) {
     return String(x).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
-const buttoncontrols: buttonControlsFunction = (data, button) => {
+const buttoncontrols: buttonControlsFunction = (button) => {
     if (button.message &&
         referencetouser[button.message.id] == button.user.id
     ) {
@@ -244,15 +246,15 @@ const weedembedrenderer = (author: Discord.User, weed: weedBusiness) => {
 };
 
 const weedstart: commandFunctionType = async ({ message }) => {
-    if (weedmenu[message.author.id]) {
-        weedmenu[message.author.id].delete().catch(() => {});
-        weedupgradesmenu[message.author.id].delete().catch(() => {});
+    if (weedmenu[message.user.id]) {
+        weedmenu[message.user.id].delete().catch(() => {});
+        weedupgradesmenu[message.user.id].delete().catch(() => {});
     }
-    weedmenu[message.author.id] = await message.reply({
+    weedmenu[message.user.id] = await message.reply({
         embeds: [
             weedembedrenderer(
-                message.author,
-                data.current.users[message.author.id].businesses.weed
+                message.user,
+                data.current.users[message.user.id].businesses.weed
             ),
         ],
         components: [
@@ -276,7 +278,7 @@ const weedstart: commandFunctionType = async ({ message }) => {
             ) as unknown as Discord.ActionRow<any>,
         ],
     });
-    weedupgradesmenu[message.author.id] = await message.reply({
+    weedupgradesmenu[message.user.id] = await message.reply({
         embeds: [
             new Discord.EmbedBuilder()
                 .setTitle("UPGRADES")
@@ -284,31 +286,31 @@ const weedstart: commandFunctionType = async ({ message }) => {
                     {
                         name: "SEED LIMIT",
                         value: `$${numberWithCommas(
-                            data.current.users[message.author.id].businesses
-                                .weed.limits.seeds * 3
+                            data.current.users[message.user.id].businesses.weed
+                                .limits.seeds * 3
                         )} to get ${numberWithCommas(
-                            data.current.users[message.author.id].businesses
-                                .weed.limits.seeds * 2
+                            data.current.users[message.user.id].businesses.weed
+                                .limits.seeds * 2
                         )}`,
                     },
                     {
                         name: "GROWING LIMIT",
                         value: `$${numberWithCommas(
-                            data.current.users[message.author.id].businesses
-                                .weed.limits.growing * 3
+                            data.current.users[message.user.id].businesses.weed
+                                .limits.growing * 3
                         )} to get ${numberWithCommas(
-                            data.current.users[message.author.id].businesses
-                                .weed.limits.growing * 2
+                            data.current.users[message.user.id].businesses.weed
+                                .limits.growing * 2
                         )}`,
                     },
                     {
                         name: "STORAGE LIMIT",
                         value: `$${numberWithCommas(
-                            data.current.users[message.author.id].businesses
-                                .weed.limits.storage * 3
+                            data.current.users[message.user.id].businesses.weed
+                                .limits.storage * 3
                         )} to get ${numberWithCommas(
-                            data.current.users[message.author.id].businesses
-                                .weed.limits.storage * 2
+                            data.current.users[message.user.id].businesses.weed
+                                .limits.storage * 2
                         )}`,
                     },
                 ])
@@ -337,8 +339,8 @@ const weedstart: commandFunctionType = async ({ message }) => {
             ) as unknown as Discord.ActionRow<any>,
         ],
     });
-    referencetouser[weedmenu[message.author.id].id] = message.author.id;
-    referencetouser[weedupgradesmenu[message.author.id].id] = message.author.id;
+    referencetouser[weedmenu[message.user.id].id] = message.user.id;
+    referencetouser[weedupgradesmenu[message.user.id].id] = message.user.id;
 };
 export { buttoncontrols, weedmenu, weedstart };
 export { weedButtonIDs };
