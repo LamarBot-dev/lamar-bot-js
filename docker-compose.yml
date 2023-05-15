@@ -1,0 +1,20 @@
+version: '3'
+
+services:
+  database:
+    image: postgres:alpine
+    restart: unless-stopped
+    environment:
+      - POSTGRES_PASSWORD=password
+    volumes:
+      - ./production/database:/var/lib/postgresql/data
+
+  bot:
+    image: lamar-bot
+    restart: unless-stopped
+    environment:
+      - TOKEN=CHANGE_ME
+      - CLIENT_ID=CHANGE_ME
+      - DATABASE_URL=postgresql://postgres:password@database:5432/postgres
+    depends_on:
+      - database

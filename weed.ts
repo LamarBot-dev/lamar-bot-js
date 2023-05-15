@@ -8,6 +8,8 @@ const weedupgradesmenu: Record<
     Discord.InteractionResponse<boolean>
 > = {};
 
+let data: any
+
 const weedButtonIDs = [
     "wbuymax",
     "wplant",

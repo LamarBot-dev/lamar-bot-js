@@ -1,6 +1,7 @@
 import { commandFunctionType } from "./command-handler";
 import { Discord, client } from "./discordclient";
 import { getuserfrommention } from "./getuserfrommention";
+let data: any;
 
 const followplayer: commandFunctionType = async ({ args, message }) => {
     const mentionid = getuserfrommention(String(args[0].value));

@@ -1,4 +1,4 @@
-import { createPool, DatabasePool } from "slonik";
+import { createPool, DatabasePool, sql } from "slonik";
 import { abort } from "process";
 
 let pool: DatabasePool | undefined;
@@ -9,6 +9,31 @@ async function getDatabase() {
 
         // set up tables
         (async () => {
+            await pool.query(
+                 sql`CREATE TABLE IF NOT EXISTS accounts (
+                    id TEXT PRIMARY KEY not NULL,
+                    created_at BIGINT not NULL
+                )`
+             );
+             
+            await pool.query(
+                sql`CREATE TABLE IF NOT EXISTS transactions (
+                    id TEXT PRIMARY KEY not NULL,
+                    account_id TEXT not NULL,
+                    amount INT not NULL,
+                    reference TEXT not NULL,
+                    created_at BIGINT not NULL
+                )`
+            );
+            
+             
+            await pool.query(
+                sql`CREATE TABLE IF NOT EXISTS followers (
+                    follower_id TEXT not NULL,
+                    following_id TEXT not NULL,
+                    created_at BIGINT not NULL
+                )`
+            );
 
         })();
     }

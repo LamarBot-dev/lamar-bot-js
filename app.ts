@@ -1,44 +1,78 @@
-import dotenv from "dotenv";
-import fs from "fs";
-import path from "path";
+import { clientID, token } from "./config";
 import { client, Discord } from "./discordclient";
-
-dotenv.config();
-const token = process.env.TOKEN ?? "";
-const clientID = process.env.CLIENT_ID ?? "";
+import { buttoncontrols, weedButtonIDs } from "./weed";
+import getDatabase from "./postgres";
+import { intro } from "./intromenu";
+import { sql } from "slonik";
 const rest = new Discord.REST().setToken(token);
 
-// custom games
-import { buttoncontrols, weedButtonIDs, weedstart } from "./weed";
-import getDatabase from "./postgres";
-
-const commands: Discord.SlashCommandBuilder[] = [
-    new Discord.SlashCommandBuilder()
-        .setName("help")
-        .setDescription("help menu"),
-    new Discord.SlashCommandBuilder()
-        .setName("weed")
-        .setDescription("weed game"),
+const commands: Discord.RESTPostAPIChatInputApplicationCommandsJSONBody[] = [
+    {
+        name: "create",
+        description: "Create your character!",
+    },
+    {
+        name: "weed",
+        description: "Start your weed farm!",
+    },
+    {
+        name: "lifeinvader",
+        description: "the LifeInvader social network",
+        options: [
+            {
+                name: "follow",
+                description: "follow a user",
+                type: Discord.ApplicationCommandOptionType.Subcommand,
+                options: [
+                    {
+                        name: "user",
+                        description: "the user to follow",
+                        type: Discord.ApplicationCommandOptionType.User,
+                        required: true,
+                    },
+                ],
+            },
+            {
+                name: "unfollow",
+                description: "unfollow a user",
+                type: Discord.ApplicationCommandOptionType.Subcommand,
+                options: [
+                    {
+                        name: "user",
+                        description: "the user to unfollow",
+                        type: Discord.ApplicationCommandOptionType.User,
+                        required: true,
+                    },
+                ],
+            },
+            {
+                name: "followers",
+                description: "see your followers",
+                type: Discord.ApplicationCommandOptionType.Subcommand,
+            },
+            {
+                name: "following",
+                description: "see who your following",
+                type: Discord.ApplicationCommandOptionType.Subcommand,
+            },
+            {
+                name: "post",
+                description: "post a message",
+                type: Discord.ApplicationCommandOptionType.Subcommand,
+                options: [
+                    {
+                        name: "message",
+                        description: "the message to post",
+                        type: Discord.ApplicationCommandOptionType.String,
+                        required: true,
+                    },
+                ],
+            },
+        ],
+    },
 ];
 
 console.log(commands);
-
-const helpmenu = (
-    message: Discord.Message,
-    title: string | undefined,
-    commands: Discord.RestOrArray<Discord.APIEmbedField>
-) =>
-    new Discord.EmbedBuilder()
-        .setAuthor({
-            name: message.author.tag,
-            iconURL: message.author.avatarURL() || undefined,
-        })
-        .setThumbnail(
-            "https://github.com/Ugric/lamar-bot-js/blob/main/images/infomation%20icon.png?raw=true"
-        )
-        .setTitle(`HELP MENU${title ? ": " + title : ""}`)
-        .setDescription("commands:")
-        .addFields(...commands);
 
 client.on("guildCreate", async (guild) => {
     console.log("joined a guild!");
@@ -73,7 +107,7 @@ client.on("guildCreate", async (guild) => {
             });
         const data: any = await rest.put(
             Discord.Routes.applicationGuildCommands(clientID, guild.id),
-            { body: commands.map((val) => val.toJSON()) }
+            { body: commands }
         );
 
         console.log(
@@ -83,28 +117,75 @@ client.on("guildCreate", async (guild) => {
         // And of course, make sure you catch and log any errors!
         console.error(error);
     }
+    guild.channels.cache.forEach((channel) => {
+        console.log(channel.name, channel.id, channel.type);
+    });
 });
 
-client.on("ready", () => {
+client.on("ready", async () => {
     console.log(`Logged in as ${client.user?.tag}!`);
     console.log("connecting database...");
-    getDatabase();
+    await getDatabase();
     console.log("connected!");
+
+    process
+        .on("unhandledRejection", console.error)
+        .on("uncaughtException", console.error);
 });
 
 client.on("interactionCreate", async (interaction) => {
+    const pool = await getDatabase();
     if (interaction.type == Discord.InteractionType.ApplicationCommand) {
-        if (interaction.commandName == "weed") {
-            console.log("weed command");
-            weedstart({
-                message: interaction,
-                args: interaction.options.data,
-            });
-        } else if (interaction.commandName == "intro") {
-            console.log("intro command");
+        const account = await pool.maybeOne(sql`
+            SELECT * FROM accounts WHERE id = ${interaction.user.id}
+        `);
+        switch (interaction.commandName) {
+            case "create":
+                if (!account) {
+                    intro({ message: interaction, args: [] });
+                } else {
+                    interaction.reply({
+                        embeds: [
+                            new Discord.EmbedBuilder()
+                                .setAuthor({
+                                    name: interaction.user.tag,
+                                    iconURL:
+                                        interaction.user.avatarURL() ||
+                                        undefined,
+                                })
+                                .setTitle("You already have an account!")
+                                .setThumbnail(
+                                    "https://github.com/Ugric/lamar-bot-js/blob/main/images/infomation%20icon.png?raw=true"
+                                )
+                                .setImage(
+                                    "https://github.com/Ugric/lamar-bot-js/blob/main/images/no%20no%20no.gif?raw=true"
+                                ),
+                        ],
+                        ephemeral: true,
+                    });
+                }
+                return;
         }
+        interaction.reply({
+            embeds: [
+                new Discord.EmbedBuilder()
+                    .setAuthor({
+                        name: interaction.user.tag,
+                        iconURL: interaction.user.avatarURL() || undefined,
+                    })
+                    .setTitle("command not found!")
+                    .setThumbnail(
+                        "https://github.com/Ugric/lamar-bot-js/blob/main/images/infomation%20icon.png?raw=true"
+                    )
+                    .setImage(
+                        "https://github.com/Ugric/lamar-bot-js/blob/main/images/no%20no%20no.gif?raw=true"
+                    ),
+            ],
+            ephemeral: true,
+        });
         return;
-    } else if (interaction.type != Discord.InteractionType.MessageComponent) return;
+    } else if (interaction.type != Discord.InteractionType.MessageComponent)
+        return;
     const button = interaction;
     if (button.member?.user) {
         button.deferUpdate().catch(console.error);
