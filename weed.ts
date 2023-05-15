@@ -1,14 +1,12 @@
+import { sql } from "slonik";
 import { buttonControlsFunction } from "./buttonControls";
 import { commandFunctionType } from "./command-handler";
 import { Discord } from "./discordclient";
+import getDatabase from "./postgres";
+import { get_account } from "./postgres/account";
 const referencetouser: Record<string, string> = {};
-const weedmenu: Record<string, Discord.InteractionResponse<boolean>> = {};
-const weedupgradesmenu: Record<
-    string,
-    Discord.InteractionResponse<boolean>
-> = {};
-
-let data: any
+const weedmenu: Record<string, Discord.Message> = {};
+const weedupgradesmenu: Record<string, Discord.Message> = {};
 
 const weedButtonIDs = [
     "wbuymax",
@@ -20,139 +18,43 @@ const weedButtonIDs = [
     "wustorage",
 ];
 
-type weedBusiness = {
-    limits: {
-        storage: number;
-        growing: number;
-        seeds: number;
-    };
-    data: {
-        storage: number;
-        growing: Array<{
-            amount: number;
-            time: number;
-        }>;
-        seeds: number;
-    };
-};
-
 function numberWithCommas(x: number) {
     return String(x).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
-const buttoncontrols: buttonControlsFunction = (button) => {
-    if (button.message &&
+const buttoncontrols: buttonControlsFunction = async (button) => {
+    const pool = await getDatabase();
+    if (
+        button.message &&
         referencetouser[button.message.id] == button.user.id
     ) {
-        const account = data.current.users[button.user.id];
-        const business = account.businesses.weed;
+        const account = await get_account(button.user);
+        if (!account) return;
         let update = false;
         let updateupgrades = false;
-        const storageLeft = business.limits.storage - business.data.storage;
-        let growingnum = 0;
-        for (const grow of business.data.growing) {
-            growingnum += grow.amount;
-        }
         if (button.customId == "wbuymax") {
-            const tobuy = business.limits.seeds - business.data.seeds;
-            if (tobuy > 0 && account.money > 0) {
-                if (account.money - tobuy < 0) {
-                    business.data.seeds += account.money;
-                    account.money = 0;
-                } else {
-                    business.data.seeds += tobuy;
-                    account.money -= tobuy;
-                }
-                update = true;
-            }
+            if (await account.weed.buy_seeds()) update = true;
         } else if (button.customId == "wplant") {
-            if (
-                business.data.seeds > 0 &&
-                growingnum < business.limits.growing
-            ) {
-                const maxToPlant = business.limits.growing - growingnum;
-                const toPlant =
-                    maxToPlant < business.data.seeds
-                        ? maxToPlant
-                        : business.data.seeds;
-
-                business.data.seeds -= toPlant;
-                business.data.growing.push({
-                    amount: toPlant,
-                    time: new Date().getTime(),
-                });
-                update = true;
-            }
+            if (await account.weed.plant()) update = true;
         } else if (button.customId == "wpick") {
-            if (growingnum > 0 && storageLeft > 0) {
-                let toAdd = 0;
-                const currentTime = new Date().getTime();
-                for (let i = 0; i < business.data.growing.length; i++) {
-                    if (currentTime - business.data.growing[i].time >= 60000) {
-                        if (
-                            storageLeft -
-                                toAdd -
-                                business.data.growing[i].amount <
-                            0
-                        ) {
-                            business.data.growing[i].amount = -(
-                                storageLeft -
-                                toAdd -
-                                business.data.growing[i].amount
-                            );
-                            toAdd = storageLeft;
-                            break;
-                        } else {
-                            toAdd += business.data.growing[i].amount;
-                            business.data.growing = [
-                                ...business.data.growing.slice(0, i),
-                                ...business.data.growing.slice(i + 1),
-                            ];
-                        }
-                    }
-                }
-                business.data.growing = business.data.growing.filter(function (
-                    el: any
-                ) {
-                    return el != null;
-                });
-                business.data.storage += toAdd;
-                update = true;
-            }
+            if (await account.weed.pick()) update = true;
         } else if (button.customId == "wsellall") {
-            if (business.data.storage > 0) {
-                account.money += business.data.storage * 10;
-                business.data.storage = 0;
-                update = true;
-            }
+            if (await account.weed.sell()) update = true;
         } else if (button.customId == "wuseeds") {
-            if (account.money - business.limits.seeds * 3 > 0) {
-                account.money -= business.limits.seeds * 3;
-                business.limits.seeds *= 2;
-                updateupgrades = true;
-                update = true;
-            }
         } else if (button.customId == "wugrowing") {
-            if (account.money - business.limits.growing * 3 > 0) {
-                account.money -= business.limits.growing * 3;
-                business.limits.growing *= 2;
-                updateupgrades = true;
-                update = true;
-            }
         } else {
-            if (account.money - business.limits.storage * 3 > 0) {
-                account.money -= business.limits.storage * 3;
-                business.limits.storage *= 2;
-                updateupgrades = true;
-                update = true;
-            }
         }
         if (update) {
             weedmenu[button.user.id].edit({
-                embeds: [weedembedrenderer(button.user, business)],
+                embeds: [(await weedembedrenderer(button.user)) || {}],
             });
         }
         if (updateupgrades) {
+            const [seedslimit, growinglimit, storagelimit] = await Promise.all([
+                account.weed.limits.seeds(),
+                account.weed.limits.growing(),
+                account.weed.limits.storage(),
+            ]);
             weedupgradesmenu[button.user.id].edit({
                 embeds: [
                     new Discord.EmbedBuilder()
@@ -161,25 +63,23 @@ const buttoncontrols: buttonControlsFunction = (button) => {
                             {
                                 name: "SEED LIMIT",
                                 value: `$${numberWithCommas(
-                                    business.limits.seeds * 3
-                                )} to get ${numberWithCommas(
-                                    business.limits.seeds * 2
-                                )}`,
+                                    seedslimit * 3
+                                )} to get ${numberWithCommas(seedslimit * 2)}`,
                             },
                             {
                                 name: "GROWING LIMIT",
                                 value: `$${numberWithCommas(
-                                    business.limits.growing * 3
+                                    growinglimit * 3
                                 )} to get ${numberWithCommas(
-                                    business.limits.growing * 2
+                                    growinglimit * 2
                                 )}`,
                             },
                             {
                                 name: "STORAGE LIMIT",
                                 value: `$${numberWithCommas(
-                                    business.limits.storage * 3
+                                    storagelimit * 3
                                 )} to get ${numberWithCommas(
-                                    business.limits.storage * 2
+                                    storagelimit * 2
                                 )}`,
                             },
                         ])
@@ -196,11 +96,27 @@ const buttoncontrols: buttonControlsFunction = (button) => {
     }
 };
 
-const weedembedrenderer = (author: Discord.User, weed: weedBusiness) => {
-    let growingnum = 0;
-    for (const grow of weed.data.growing) {
-        growingnum += grow.amount;
-    }
+const weedembedrenderer = async (author: Discord.User) => {
+    const account = await get_account(author);
+    if (!account) return;
+    const [
+        money,
+        seeds,
+        growingnum,
+        storage,
+        seedslimit,
+        growinglimit,
+        storagelimit,
+    ] = await Promise.all([
+        account.money(),
+        account.weed.count.seeds(),
+        account.weed.count.growing(),
+        account.weed.count.storage(),
+        account.weed.limits.seeds(),
+        account.weed.limits.growing(),
+        account.weed.limits.storage(),
+    ]);
+
     return new Discord.EmbedBuilder()
         .setAuthor({
             name: author.tag,
@@ -210,31 +126,25 @@ const weedembedrenderer = (author: Discord.User, weed: weedBusiness) => {
         .addFields([
             {
                 name: "CASH",
-                value: `$${numberWithCommas(
-                    data.current.users[author.id].money
-                )}`,
+                value: `$${numberWithCommas(money)}`,
             },
             {
                 name: "SEEDS",
-                value: `${numberWithCommas(
-                    weed.data.seeds
-                )} / ${numberWithCommas(weed.limits.seeds)} ${Math.floor(
-                    (weed.data.seeds / weed.limits.seeds) * 100
-                )}%`,
+                value: `${numberWithCommas(seeds)} / ${numberWithCommas(
+                    seedslimit
+                )} ${Math.floor((seeds / seedslimit) * 100)}%`,
             },
             {
                 name: "GROWING",
                 value: `${numberWithCommas(growingnum)} / ${numberWithCommas(
-                    weed.limits.growing
-                )} ${Math.floor((growingnum / weed.limits.growing) * 100)}%`,
+                    growinglimit
+                )} ${Math.floor((growingnum / growinglimit) * 100)}%`,
             },
             {
                 name: "STORAGE",
-                value: `${numberWithCommas(
-                    weed.data.storage
-                )} / ${numberWithCommas(weed.limits.storage)} ${Math.floor(
-                    (weed.data.storage / weed.limits.storage) * 100
-                )}%`,
+                value: `${numberWithCommas(storage)} / ${numberWithCommas(
+                    storagelimit
+                )} ${Math.floor((storage / storagelimit) * 100)}%`,
             },
         ])
         .setThumbnail(
@@ -248,17 +158,18 @@ const weedembedrenderer = (author: Discord.User, weed: weedBusiness) => {
 };
 
 const weedstart: commandFunctionType = async ({ message }) => {
+    const account = await get_account(message.user);
+    if (!account || !message.channel) return;
     if (weedmenu[message.user.id]) {
         weedmenu[message.user.id].delete().catch(() => {});
         weedupgradesmenu[message.user.id].delete().catch(() => {});
     }
-    weedmenu[message.user.id] = await message.reply({
-        embeds: [
-            weedembedrenderer(
-                message.user,
-                data.current.users[message.user.id].businesses.weed
-            ),
-        ],
+    message.reply({
+        content: "opening weed farm...",
+        ephemeral: true,
+    })
+    weedmenu[message.user.id] = await message.channel.send({
+        embeds: [(await weedembedrenderer(message.user)) || {}],
         components: [
             new Discord.ActionRowBuilder().addComponents(
                 new Discord.ButtonBuilder()
@@ -280,7 +191,12 @@ const weedstart: commandFunctionType = async ({ message }) => {
             ) as unknown as Discord.ActionRow<any>,
         ],
     });
-    weedupgradesmenu[message.user.id] = await message.reply({
+    const [seedslimit, growinglimit, storagelimit] = await Promise.all([
+        account.weed.limits.seeds(),
+        account.weed.limits.growing(),
+        account.weed.limits.storage(),
+    ]);
+    weedupgradesmenu[message.user.id] = await message.channel.send({
         embeds: [
             new Discord.EmbedBuilder()
                 .setTitle("UPGRADES")
@@ -288,32 +204,20 @@ const weedstart: commandFunctionType = async ({ message }) => {
                     {
                         name: "SEED LIMIT",
                         value: `$${numberWithCommas(
-                            data.current.users[message.user.id].businesses.weed
-                                .limits.seeds * 3
-                        )} to get ${numberWithCommas(
-                            data.current.users[message.user.id].businesses.weed
-                                .limits.seeds * 2
-                        )}`,
+                            seedslimit * 3
+                        )} to get ${numberWithCommas(seedslimit * 2)}`,
                     },
                     {
                         name: "GROWING LIMIT",
                         value: `$${numberWithCommas(
-                            data.current.users[message.user.id].businesses.weed
-                                .limits.growing * 3
-                        )} to get ${numberWithCommas(
-                            data.current.users[message.user.id].businesses.weed
-                                .limits.growing * 2
-                        )}`,
+                            growinglimit * 3
+                        )} to get ${numberWithCommas(growinglimit * 2)}`,
                     },
                     {
                         name: "STORAGE LIMIT",
                         value: `$${numberWithCommas(
-                            data.current.users[message.user.id].businesses.weed
-                                .limits.storage * 3
-                        )} to get ${numberWithCommas(
-                            data.current.users[message.user.id].businesses.weed
-                                .limits.storage * 2
-                        )}`,
+                            storagelimit * 3
+                        )} to get ${numberWithCommas(storagelimit * 2)}`,
                     },
                 ])
                 .setThumbnail(
@@ -346,4 +250,3 @@ const weedstart: commandFunctionType = async ({ message }) => {
 };
 export { buttoncontrols, weedmenu, weedstart };
 export { weedButtonIDs };
-export type { weedBusiness };

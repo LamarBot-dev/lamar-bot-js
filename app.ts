@@ -1,6 +1,6 @@
 import { clientID, token } from "./config";
 import { client, Discord } from "./discordclient";
-import { buttoncontrols, weedButtonIDs } from "./weed";
+import { buttoncontrols, weedButtonIDs, weedstart } from "./weed";
 import getDatabase from "./postgres";
 import { intro } from "./intromenu";
 import { sql } from "slonik";
@@ -163,6 +163,11 @@ client.on("interactionCreate", async (interaction) => {
                         ],
                         ephemeral: true,
                     });
+                }
+                return;
+            case "weed":
+                if (account) {
+                    weedstart({ message: interaction, args: [] });
                 }
                 return;
         }
