@@ -16,6 +16,7 @@ const weedButtonIDs = [
     "wuseeds",
     "wugrowing",
     "wustorage",
+    "wuspeed",
 ];
 
 function numberWithCommas(x: number) {
@@ -32,73 +33,98 @@ const buttoncontrols: buttonControlsFunction = async (button) => {
         if (!account) return;
         let update = false;
         let updateupgrades = false;
-        if (button.customId == "wbuymax") {
-            if (await account.weed.buy_seeds()) update = true;
-        } else if (button.customId == "wplant") {
-            if (await account.weed.plant()) update = true;
-        } else if (button.customId == "wpick") {
-            if (await account.weed.pick()) update = true;
-        } else if (button.customId == "wsellall") {
-            if (await account.weed.sell()) update = true;
-        } else if (button.customId == "wuseeds") {
-        } else if (button.customId == "wugrowing") {
-        } else {
+        switch (button.customId) {
+            case "wbuymax":
+                if (await account.weed.buy_seeds()) update = true;
+                break;
+            case "wplant":
+                if (await account.weed.plant()) update = true;
+                break;
+            case "wpick":
+                if (await account.weed.pick()) update = true;
+                break;
+            case "wsellall":
+                if (await account.weed.sell()) update = true;
+                break;
+            case "wuseeds":
+                if (await account.weed.upgrades.seeds()) updateupgrades = true;
+                break;
+            case "wugrowing":
+                if (await account.weed.upgrades.growing())
+                    updateupgrades = true;
+                break;
+            case "wustorage":
+                if (await account.weed.upgrades.storage())
+                    updateupgrades = true;
+                break;
+            case "wuspeed":
+                if (await account.weed.upgrades.speed()) updateupgrades = true;
+                break;
         }
-        if (update) {
+        if (update || updateupgrades) {
             weedmenu[button.user.id].edit({
-                embeds: [(await weedembedrenderer(button.user)) || {}],
+                embeds: [await weedembedrenderer(button.user)],
             });
         }
         if (updateupgrades) {
-            const [seedslimit, growinglimit, storagelimit] = await Promise.all([
-                account.weed.limits.seeds(),
-                account.weed.limits.growing(),
-                account.weed.limits.storage(),
-            ]);
             weedupgradesmenu[button.user.id].edit({
-                embeds: [
-                    new Discord.EmbedBuilder()
-                        .setTitle("UPGRADES")
-                        .addFields([
-                            {
-                                name: "SEED LIMIT",
-                                value: `$${numberWithCommas(
-                                    seedslimit * 3
-                                )} to get ${numberWithCommas(seedslimit * 2)}`,
-                            },
-                            {
-                                name: "GROWING LIMIT",
-                                value: `$${numberWithCommas(
-                                    growinglimit * 3
-                                )} to get ${numberWithCommas(
-                                    growinglimit * 2
-                                )}`,
-                            },
-                            {
-                                name: "STORAGE LIMIT",
-                                value: `$${numberWithCommas(
-                                    storagelimit * 3
-                                )} to get ${numberWithCommas(
-                                    storagelimit * 2
-                                )}`,
-                            },
-                        ])
-                        .setThumbnail(
-                            "https://github.com/Ugric/lamar-bot-js/blob/main/images/weed.png?raw=true&nocache=1"
-                        )
-                        .setImage(
-                            "https://github.com/Ugric/lamar-bot-js/blob/main/images/smoke%20on%20the%20water.png?raw=true"
-                        )
-                        .setColor("#047000"),
-                ],
+                embeds: [await upgradeembedrenderer(button.user)],
             });
         }
     }
 };
 
+const upgradeembedrenderer = async (author: Discord.User) => {
+    const account = await get_account(author);
+    if (!account) return {};
+    const [seedslimit, growinglimit, storagelimit, speedlimit] =
+        await Promise.all([
+            account.weed.limits.seeds(),
+            account.weed.limits.growing(),
+            account.weed.limits.storage(),
+            account.weed.limits.speed(),
+        ]);
+    const newspeed = 10000 * (1 / (speedlimit + 1));
+    return new Discord.EmbedBuilder()
+        .setTitle("UPGRADES")
+        .addFields([
+            {
+                name: "SEED LIMIT",
+                value: `$${numberWithCommas(
+                    seedslimit * 3
+                )} to get ${numberWithCommas(seedslimit * 2)}`,
+            },
+            {
+                name: "GROWING LIMIT",
+                value: `$${numberWithCommas(
+                    growinglimit * 3
+                )} to get ${numberWithCommas(growinglimit * 2)}`,
+            },
+            {
+                name: "STORAGE LIMIT",
+                value: `$${numberWithCommas(
+                    storagelimit * 3
+                )} to get ${numberWithCommas(storagelimit * 2)}`,
+            },
+            {
+                name: "GROWING SPEED",
+                value: `$${numberWithCommas(
+                    (speedlimit ** 2) * 100
+                )} to get ${Number((newspeed / 1000).toFixed(2))}s per seed`,
+            },
+        ])
+        .setThumbnail(
+            "https://github.com/Ugric/lamar-bot-js/blob/main/images/weed.png?raw=true&nocache=1"
+        )
+        .setColor("#047000")
+        .setImage(
+            "https://github.com/Ugric/lamar-bot-js/blob/main/images/smoke%20on%20the%20water.png?raw=true"
+        );
+};
+
 const weedembedrenderer = async (author: Discord.User) => {
     const account = await get_account(author);
-    if (!account) return;
+    if (!account) return {};
     const [
         money,
         seeds,
@@ -167,9 +193,9 @@ const weedstart: commandFunctionType = async ({ message }) => {
     message.reply({
         content: "opening weed farm...",
         ephemeral: true,
-    })
+    });
     weedmenu[message.user.id] = await message.channel.send({
-        embeds: [(await weedembedrenderer(message.user)) || {}],
+        embeds: [await weedembedrenderer(message.user)],
         components: [
             new Discord.ActionRowBuilder().addComponents(
                 new Discord.ButtonBuilder()
@@ -191,43 +217,8 @@ const weedstart: commandFunctionType = async ({ message }) => {
             ) as unknown as Discord.ActionRow<any>,
         ],
     });
-    const [seedslimit, growinglimit, storagelimit] = await Promise.all([
-        account.weed.limits.seeds(),
-        account.weed.limits.growing(),
-        account.weed.limits.storage(),
-    ]);
     weedupgradesmenu[message.user.id] = await message.channel.send({
-        embeds: [
-            new Discord.EmbedBuilder()
-                .setTitle("UPGRADES")
-                .addFields([
-                    {
-                        name: "SEED LIMIT",
-                        value: `$${numberWithCommas(
-                            seedslimit * 3
-                        )} to get ${numberWithCommas(seedslimit * 2)}`,
-                    },
-                    {
-                        name: "GROWING LIMIT",
-                        value: `$${numberWithCommas(
-                            growinglimit * 3
-                        )} to get ${numberWithCommas(growinglimit * 2)}`,
-                    },
-                    {
-                        name: "STORAGE LIMIT",
-                        value: `$${numberWithCommas(
-                            storagelimit * 3
-                        )} to get ${numberWithCommas(storagelimit * 2)}`,
-                    },
-                ])
-                .setThumbnail(
-                    "https://github.com/Ugric/lamar-bot-js/blob/main/images/weed.png?raw=true&nocache=1"
-                )
-                .setColor("#047000")
-                .setImage(
-                    "https://github.com/Ugric/lamar-bot-js/blob/main/images/smoke%20on%20the%20water.png?raw=true"
-                ),
-        ],
+        embeds: [await upgradeembedrenderer(message.user)],
         components: [
             new Discord.ActionRowBuilder().addComponents(
                 new Discord.ButtonBuilder()
@@ -241,7 +232,11 @@ const weedstart: commandFunctionType = async ({ message }) => {
                 new Discord.ButtonBuilder()
                     .setStyle(Discord.ButtonStyle.Primary)
                     .setCustomId("wustorage")
-                    .setLabel("UPGRADE STORAGE")
+                    .setLabel("UPGRADE STORAGE"),
+                new Discord.ButtonBuilder()
+                    .setStyle(Discord.ButtonStyle.Primary)
+                    .setCustomId("wuspeed")
+                    .setLabel("UPGRADE SPEED")
             ) as unknown as Discord.ActionRow<any>,
         ],
     });

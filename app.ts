@@ -168,26 +168,47 @@ client.on("interactionCreate", async (interaction) => {
             case "weed":
                 if (account) {
                     weedstart({ message: interaction, args: [] });
+                    return;
                 }
-                return;
         }
-        interaction.reply({
-            embeds: [
-                new Discord.EmbedBuilder()
-                    .setAuthor({
-                        name: interaction.user.tag,
-                        iconURL: interaction.user.avatarURL() || undefined,
-                    })
-                    .setTitle("command not found!")
-                    .setThumbnail(
-                        "https://github.com/Ugric/lamar-bot-js/blob/main/images/infomation%20icon.png?raw=true"
-                    )
-                    .setImage(
-                        "https://github.com/Ugric/lamar-bot-js/blob/main/images/no%20no%20no.gif?raw=true"
-                    ),
-            ],
-            ephemeral: true,
-        });
+        if (account) {
+            interaction.reply({
+                embeds: [
+                    new Discord.EmbedBuilder()
+                        .setAuthor({
+                            name: interaction.user.tag,
+                            iconURL: interaction.user.avatarURL() || undefined,
+                        })
+                        .setTitle("command not found!")
+                        .setThumbnail(
+                            "https://github.com/Ugric/lamar-bot-js/blob/main/images/infomation%20icon.png?raw=true"
+                        )
+                        .setImage(
+                            "https://github.com/Ugric/lamar-bot-js/blob/main/images/no%20no%20no.gif?raw=true"
+                        ),
+                ],
+                ephemeral: true,
+            });
+        } else {
+            interaction.reply({
+                embeds: [
+                    new Discord.EmbedBuilder()
+                        .setAuthor({
+                            name: interaction.user.tag,
+                            iconURL: interaction.user.avatarURL() || undefined,
+                        })
+                        .setTitle("You don't have an account!")
+                        .setThumbnail(
+                            "https://github.com/Ugric/lamar-bot-js/blob/main/images/infomation%20icon.png?raw=true"
+                        )
+                        .setImage(
+                            "https://github.com/Ugric/lamar-bot-js/blob/main/images/no%20no%20no.gif?raw=true"
+                        )
+                        .setDescription("Use `/create` to create an account!"),
+                ],
+                ephemeral: true,
+            });
+        }
         return;
     } else if (interaction.type != Discord.InteractionType.MessageComponent)
         return;
