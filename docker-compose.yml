@@ -10,7 +10,7 @@ services:
       - ./production/database:/var/lib/postgresql/data
 
   bot:
-    image: lamar-bot
+    image: ugric/lamar-bot
     restart: unless-stopped
     environment:
       - TOKEN=CHANGE_ME
