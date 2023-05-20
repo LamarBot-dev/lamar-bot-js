@@ -24,7 +24,6 @@ function numberWithCommas(x: number) {
 }
 
 const buttoncontrols: buttonControlsFunction = async (button) => {
-    const pool = await getDatabase();
     if (
         button.message &&
         referencetouser[button.message.id] == button.user.id

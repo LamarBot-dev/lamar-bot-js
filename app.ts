@@ -5,6 +5,7 @@ import getDatabase from "./postgres";
 import { intro } from "./intromenu";
 import { sql } from "slonik";
 import { followplayer, twat, unfollowplayer } from "./lifeinvader";
+import sendChannelMessage from "./lamar-channel-message";
 const rest = new Discord.REST().setToken(token);
 
 const commands: Discord.RESTPostAPIChatInputApplicationCommandsJSONBody[] = [
@@ -119,7 +120,9 @@ client.on("guildCreate", async (guild) => {
         console.error(error);
     }
     guild.channels.cache.forEach((channel) => {
-        console.log(channel.name, channel.id, channel.type);
+        if (channel.name.includes("lamar-bot") && channel.isTextBased()) {
+            sendChannelMessage(channel);
+        }
     });
 });
 
@@ -132,6 +135,24 @@ client.on("ready", async () => {
     process
         .on("unhandledRejection", console.error)
         .on("uncaughtException", console.error);
+});
+
+client.on("channelCreate", async (channel) => {
+    if (channel.name.includes("lamar-bot") && channel.isTextBased()) {
+        sendChannelMessage(channel);
+    }
+});
+
+client.on("channelUpdate", async (oldChannel, newChannel) => {
+    if (
+        "name" in newChannel &&
+        "nsfw" in oldChannel &&
+        newChannel.name.includes("lamar-bot") &&
+        newChannel.isTextBased() &&
+        newChannel.nsfw != oldChannel.nsfw
+    ) {
+        sendChannelMessage(newChannel);
+    }
 });
 
 client.on("interactionCreate", async (interaction) => {
@@ -177,10 +198,10 @@ client.on("interactionCreate", async (interaction) => {
                     const Subcommand = interaction.options.getSubcommand();
                     switch (Subcommand) {
                         case "follow":
-                            followplayer(interaction)
+                            followplayer(interaction);
                             break;
                         case "unfollow":
-                            unfollowplayer(interaction)
+                            unfollowplayer(interaction);
                             break;
                         case "followers":
                             break;
@@ -190,7 +211,7 @@ client.on("interactionCreate", async (interaction) => {
                             twat(interaction);
                             break;
                     }
-                    return
+                    return;
                 }
                 break;
         }
@@ -237,8 +258,8 @@ client.on("interactionCreate", async (interaction) => {
         return;
     const button = interaction;
     if (button.member?.user) {
-        button.deferUpdate().catch(console.error);
         if (weedButtonIDs.includes(button.customId)) {
+            button.deferUpdate().catch(console.error);
             buttoncontrols(button);
         } else {
             button
