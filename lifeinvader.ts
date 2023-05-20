@@ -115,7 +115,7 @@ const unfollowplayer: commandFunctionType = async (message) => {
     if (!account) return;
     if (mentionid) {
         if (mentionid != message.user.id) {
-            if (!(await get_account(mentionid))) {
+            if ((await get_account(mentionid))) {
                 const following = await account.lifeinvader.following();
                 if (following.includes(mentionid)) {
                     await account.lifeinvader.unfollow(mentionid);
