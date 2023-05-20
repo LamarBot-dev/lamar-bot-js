@@ -10,7 +10,7 @@ const followplayer: commandFunctionType = async (message) => {
     if (!account) return;
     if (mentionid) {
         if (mentionid != message.user.id) {
-            if (!(await get_account(mentionid))) {
+            if ((await get_account(mentionid))) {
                 const following = await account.lifeinvader.following();
                 if (!following.includes(mentionid)) {
                     await account.lifeinvader.follow(mentionid);
@@ -32,7 +32,7 @@ const followplayer: commandFunctionType = async (message) => {
                                     .setDescription(
                                         `${
                                             message.user.tag
-                                        } just followed you, you now have ${await account.lifeinvader.followers()} followers!`
+                                        } just followed you, you now have ${(await account.lifeinvader.followers()).length} followers!`
                                     )
                                     .setTimestamp(new Date().getTime()),
                             ],
