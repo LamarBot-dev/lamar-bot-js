@@ -92,8 +92,6 @@ client.on("guildCreate", async (guild) => {
         console.log(
             `Started refreshing ${commands.length} application (/) commands.`
         );
-
-        // The put method is used to fully refresh all commands in the guild with the current set
         await rest
             .get(Discord.Routes.applicationGuildCommands(clientID, guild.id))
             .then((data: any) => {
@@ -116,7 +114,6 @@ client.on("guildCreate", async (guild) => {
             `Successfully reloaded ${data.length} application (/) commands.`
         );
     } catch (error) {
-        // And of course, make sure you catch and log any errors!
         console.error(error);
     }
     guild.channels.cache.forEach((channel) => {
@@ -259,31 +256,29 @@ client.on("interactionCreate", async (interaction) => {
     const button = interaction;
     if (button.member?.user) {
         if (weedButtonIDs.includes(button.customId)) {
-            button.deferUpdate().catch(console.error);
             buttoncontrols(button);
+            return;
         } else {
-            button
-                .reply({
-                    embeds: [
-                        new Discord.EmbedBuilder()
-                            .setAuthor({
-                                name: button.user.tag,
-                                iconURL: button.user.avatarURL() || undefined,
-                            })
-                            .setTitle("unknown button!")
-                            .setThumbnail(
-                                "https://github.com/Ugric/lamar-bot-js/blob/main/images/infomation%20icon.png?raw=true"
-                            )
-                            .setImage(
-                                "https://github.com/Ugric/lamar-bot-js/blob/main/images/no%20no%20no.gif?raw=true"
-                            ),
-                    ],
-                })
-                .catch(console.error);
+            await button.reply({
+                embeds: [
+                    new Discord.EmbedBuilder()
+                        .setAuthor({
+                            name: button.user.tag,
+                            iconURL: button.user.avatarURL() || undefined,
+                        })
+                        .setTitle("unknown button!")
+                        .setThumbnail(
+                            "https://github.com/Ugric/lamar-bot-js/blob/main/images/infomation%20icon.png?raw=true"
+                        )
+                        .setImage(
+                            "https://github.com/Ugric/lamar-bot-js/blob/main/images/no%20no%20no.gif?raw=true"
+                        ),
+                ],
+            });
         }
-    } else {
-        button.deferUpdate().catch(console.error);
     }
+
+    await button.deferUpdate();
 });
 
 client.login(token);

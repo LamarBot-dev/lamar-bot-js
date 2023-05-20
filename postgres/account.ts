@@ -132,7 +132,6 @@ export async function get_account(userID: string): Promise<account | null> {
                     `);
                     const cost = speed_upgrade ** 2 * 100;
                     const balance = await accountobj.money();
-                    console.log(balance, cost);
                     if (balance >= cost) {
                         await Promise.all([
                             pool.query(sql`

@@ -10,37 +10,39 @@ export const intro: commandFunctionType = async (message) => {
     if (inintro.includes(message.user.id)) return;
     inintro.push(message.user.id);
     const pool = await getDatabase();
-    await Promise.all([
-        message.reply({
-            embeds: [
-                new Discord.EmbedBuilder()
-                    .setAuthor({
-                        name: message.user.tag,
-                        iconURL: message.user.avatarURL() || undefined,
-                    })
-                    .setDescription(`This intro continues in your DMs!`),
-            ],
-            ephemeral: true,
-        }),
-        message.user.send({
-            embeds: [
-                new Discord.EmbedBuilder()
-                    .setAuthor({
-                        name: message.user.tag,
-                        iconURL: message.user.avatarURL() || undefined,
-                    })
-                    .setThumbnail(
-                        "https://github.com/Ugric/lamar-bot-js/blob/main/images/infomation%20icon.png?raw=true"
-                    )
-                    .setImage(
-                        "https://github.com/Ugric/lamar-bot-js/blob/main/images/tv%20micheal.gif?raw=true"
-                    )
-                    .setDescription(
-                        `Hello ${message.user.username}, and welcome to the Lamar Bot experience!`
-                    ),
-            ],
-        }),
-    ]);
+    await message.deferReply({
+        ephemeral: true,
+    });
+    const initalmessage =  await message.user.send({
+        embeds: [
+            new Discord.EmbedBuilder()
+                .setAuthor({
+                    name: message.user.tag,
+                    iconURL: message.user.avatarURL() || undefined,
+                })
+                .setThumbnail(
+                    "https://github.com/Ugric/lamar-bot-js/blob/main/images/infomation%20icon.png?raw=true"
+                )
+                .setImage(
+                    "https://github.com/Ugric/lamar-bot-js/blob/main/images/tv%20micheal.gif?raw=true"
+                )
+                .setDescription(
+                    `Hello ${message.user.username}, and welcome to the Lamar Bot experience!`
+                ),
+        ],
+    });
+    message.editReply({
+        embeds: [
+            new Discord.EmbedBuilder()
+                .setAuthor({
+                    name: message.user.tag,
+                    iconURL: message.user.avatarURL() || undefined,
+                })
+                .setDescription(
+                    `This intro continues in your [DMs](${initalmessage.url})!`
+                ),
+        ],
+    });
     await snooze(5000);
     await message.user.send({
         embeds: [

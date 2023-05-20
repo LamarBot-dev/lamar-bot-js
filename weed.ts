@@ -4,8 +4,7 @@ import { commandFunctionType } from "./command-handler";
 import { Discord } from "./discordclient";
 import getDatabase from "./postgres";
 import { get_account } from "./postgres/account";
-const referencetouser: Record<string, string> = {};
-const weedmenu: Record<string, Discord.Message> = {};
+const weedmenu: Record<string, Discord.Message<boolean>> = {};
 const weedupgradesmenu: Record<string, Discord.Message> = {};
 
 const weedButtonIDs = [
@@ -24,10 +23,7 @@ function numberWithCommas(x: number) {
 }
 
 const buttoncontrols: buttonControlsFunction = async (button) => {
-    if (
-        button.message &&
-        referencetouser[button.message.id] == button.user.id
-    ) {
+    if (button.user.id == button.message?.interaction?.user.id) {
         const account = await get_account(button.user.id);
         if (!account) return;
         let update = false;
@@ -108,7 +104,7 @@ const upgradeembedrenderer = async (author: Discord.User) => {
             {
                 name: "GROWING SPEED",
                 value: `$${numberWithCommas(
-                    (speedlimit ** 2) * 100
+                    speedlimit ** 2 * 100
                 )} to get ${Number((newspeed / 1000).toFixed(2))}s per seed`,
             },
         ])
@@ -184,16 +180,15 @@ const weedembedrenderer = async (author: Discord.User) => {
 
 const weedstart: commandFunctionType = async (message) => {
     const account = await get_account(message.user.id);
+    await message.deferReply();
     if (!account || !message.channel) return;
-    if (weedmenu[message.user.id]) {
-        weedmenu[message.user.id].delete().catch(() => {});
-        weedupgradesmenu[message.user.id].delete().catch(() => {});
+    if (weedupgradesmenu[message.user.id]) {
+        await weedupgradesmenu[message.user.id].delete().catch(console.error);
     }
-    message.reply({
-        content: "opening weed farm...",
-        ephemeral: true,
-    });
-    weedmenu[message.user.id] = await message.channel.send({
+    if (weedmenu[message.user.id]) {
+        await weedmenu[message.user.id].delete().catch(console.error);
+    }
+    weedmenu[message.user.id] = await message.editReply({
         embeds: [await weedembedrenderer(message.user)],
         components: [
             new Discord.ActionRowBuilder().addComponents(
@@ -216,7 +211,7 @@ const weedstart: commandFunctionType = async (message) => {
             ) as unknown as Discord.ActionRow<any>,
         ],
     });
-    weedupgradesmenu[message.user.id] = await message.channel.send({
+    weedupgradesmenu[message.user.id] = await message.followUp({
         embeds: [await upgradeembedrenderer(message.user)],
         components: [
             new Discord.ActionRowBuilder().addComponents(
@@ -239,8 +234,6 @@ const weedstart: commandFunctionType = async (message) => {
             ) as unknown as Discord.ActionRow<any>,
         ],
     });
-    referencetouser[weedmenu[message.user.id].id] = message.user.id;
-    referencetouser[weedupgradesmenu[message.user.id].id] = message.user.id;
 };
 export { buttoncontrols, weedmenu, weedstart };
 export { weedButtonIDs };
