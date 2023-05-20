@@ -7,13 +7,9 @@ import { Discord } from "./discordclient";
 
 type commandType = { [key: string]: innerCommandType };
 
-type commandFunctionType = ({}: {
-    message:
-        | Discord.ChatInputCommandInteraction<Discord.CacheType>
-        | Discord.MessageContextMenuCommandInteraction<Discord.CacheType>
-        | Discord.UserContextMenuCommandInteraction<Discord.CacheType>;
-    args: readonly Discord.CommandInteractionOption<Discord.CacheType>[];
-}) => void;
+type commandFunctionType = (
+    interaction: Discord.ChatInputCommandInteraction<Discord.CacheType>
+) => void;
 type innerCommandType = commandFunctionType | commandType;
 
 export type { commandType, commandFunctionType, innerCommandType };

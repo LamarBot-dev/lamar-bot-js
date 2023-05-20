@@ -6,7 +6,7 @@ import { init_account } from "./postgres/account";
 import { clientID } from "./config";
 
 const inintro: string[] = [];
-export const intro: commandFunctionType = async ({ message }) => {
+export const intro: commandFunctionType = async (message) => {
     if (inintro.includes(message.user.id)) return;
     inintro.push(message.user.id);
     const pool = await getDatabase();

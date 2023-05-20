@@ -29,7 +29,7 @@ const buttoncontrols: buttonControlsFunction = async (button) => {
         button.message &&
         referencetouser[button.message.id] == button.user.id
     ) {
-        const account = await get_account(button.user);
+        const account = await get_account(button.user.id);
         if (!account) return;
         let update = false;
         let updateupgrades = false;
@@ -75,7 +75,7 @@ const buttoncontrols: buttonControlsFunction = async (button) => {
 };
 
 const upgradeembedrenderer = async (author: Discord.User) => {
-    const account = await get_account(author);
+    const account = await get_account(author.id);
     if (!account) return {};
     const [seedslimit, growinglimit, storagelimit, speedlimit] =
         await Promise.all([
@@ -123,7 +123,7 @@ const upgradeembedrenderer = async (author: Discord.User) => {
 };
 
 const weedembedrenderer = async (author: Discord.User) => {
-    const account = await get_account(author);
+    const account = await get_account(author.id);
     if (!account) return {};
     const [
         money,
@@ -183,8 +183,8 @@ const weedembedrenderer = async (author: Discord.User) => {
         .setColor("#047000");
 };
 
-const weedstart: commandFunctionType = async ({ message }) => {
-    const account = await get_account(message.user);
+const weedstart: commandFunctionType = async (message) => {
+    const account = await get_account(message.user.id);
     if (!account || !message.channel) return;
     if (weedmenu[message.user.id]) {
         weedmenu[message.user.id].delete().catch(() => {});

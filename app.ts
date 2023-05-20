@@ -4,6 +4,7 @@ import { buttoncontrols, weedButtonIDs, weedstart } from "./weed";
 import getDatabase from "./postgres";
 import { intro } from "./intromenu";
 import { sql } from "slonik";
+import { followplayer, twat, unfollowplayer } from "./lifeinvader";
 const rest = new Discord.REST().setToken(token);
 
 const commands: Discord.RESTPostAPIChatInputApplicationCommandsJSONBody[] = [
@@ -135,14 +136,14 @@ client.on("ready", async () => {
 
 client.on("interactionCreate", async (interaction) => {
     const pool = await getDatabase();
-    if (interaction.type == Discord.InteractionType.ApplicationCommand) {
+    if (interaction.isChatInputCommand()) {
         const account = await pool.maybeOne(sql`
             SELECT * FROM accounts WHERE id = ${interaction.user.id}
         `);
         switch (interaction.commandName) {
             case "create":
                 if (!account) {
-                    intro({ message: interaction, args: [] });
+                    intro(interaction);
                 } else {
                     interaction.reply({
                         embeds: [
@@ -167,9 +168,31 @@ client.on("interactionCreate", async (interaction) => {
                 return;
             case "weed":
                 if (account) {
-                    weedstart({ message: interaction, args: [] });
+                    weedstart(interaction);
                     return;
                 }
+                break;
+            case "lifeinvader":
+                if (account) {
+                    const Subcommand = interaction.options.getSubcommand();
+                    switch (Subcommand) {
+                        case "follow":
+                            followplayer(interaction)
+                            break;
+                        case "unfollow":
+                            unfollowplayer(interaction)
+                            break;
+                        case "followers":
+                            break;
+                        case "following":
+                            break;
+                        case "post":
+                            twat(interaction);
+                            break;
+                    }
+                    return
+                }
+                break;
         }
         if (account) {
             interaction.reply({
