@@ -257,7 +257,6 @@ client.on("interactionCreate", async (interaction) => {
     if (button.member?.user) {
         if (weedButtonIDs.includes(button.customId)) {
             buttoncontrols(button);
-            return;
         } else {
             await button.reply({
                 embeds: [
