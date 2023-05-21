@@ -1,9 +1,8 @@
-import { sql } from "slonik";
 import { buttonControlsFunction } from "./buttonControls";
 import { commandFunctionType } from "./command-handler";
 import { Discord } from "./discordclient";
-import getDatabase from "./postgres";
 import { get_account } from "./postgres/account";
+const referencetouser: Record<string, string> = {};
 const weedmenu: Record<string, Discord.Message<boolean>> = {};
 const weedupgradesmenu: Record<string, Discord.Message> = {};
 
@@ -23,7 +22,10 @@ function numberWithCommas(x: number) {
 }
 
 const buttoncontrols: buttonControlsFunction = async (button) => {
-    if (button.user.id == button.message?.interaction?.user.id) {
+    if (
+        button.message &&
+        referencetouser[button.message.id] == button.user.id
+    ) {
         const account = await get_account(button.user.id);
         if (!account) return;
         let update = false;
@@ -234,6 +236,8 @@ const weedstart: commandFunctionType = async (message) => {
             ) as unknown as Discord.ActionRow<any>,
         ],
     });
+    referencetouser[weedmenu[message.user.id].id] = message.user.id;
+    referencetouser[weedupgradesmenu[message.user.id].id] = message.user.id;
 };
 export { buttoncontrols, weedmenu, weedstart };
 export { weedButtonIDs };
