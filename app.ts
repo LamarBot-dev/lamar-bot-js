@@ -16,6 +16,13 @@ const commands: Discord.RESTPostAPIChatInputApplicationCommandsJSONBody[] = [
     {
         name: "weed",
         description: "Start your weed farm!",
+        // options: [
+        //     {
+        //         name:"close",
+        //         description: "Close your weed farm!",
+        //         type: Discord.ApplicationCommandOptionType.Subcommand,
+        //     }
+        // ]
     },
     {
         name: "lifeinvader",
