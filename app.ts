@@ -16,6 +16,7 @@ const commands: Discord.RESTPostAPIChatInputApplicationCommandsJSONBody[] = [
     {
         name: "weed",
         description: "Start your weed farm!",
+        // UNCOMMENT WHEN CREATING `/weed close` command
         // options: [
         //     {
         //         name:"close",
