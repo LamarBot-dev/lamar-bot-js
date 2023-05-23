@@ -151,7 +151,7 @@ const weedembedrenderer = async (author: Discord.User) => {
     ]);
 
     const timePerSeed = (10000 * (1 / (speedlimit)))
-    const timeToGrow = timePerSeed * growinglimit;
+    const timeToGrow = timePerSeed * growingnum;
 
     const time = humanizeDuration(timeToGrow, { round: true,
         largest: 2 });
