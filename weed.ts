@@ -152,8 +152,9 @@ const weedembedrenderer = async (author: Discord.User) => {
 
     const timePerSeed = (10000 * (1 / (speedlimit)))
     const timeToGrow = timePerSeed * growinglimit;
-    
-    const time = humanizeDuration(timeToGrow);
+
+    const time = humanizeDuration(timeToGrow, { round: true,
+        largest: 2 });
 
     return new Discord.EmbedBuilder()
         .setAuthor({
@@ -445,7 +446,7 @@ async function get_weed_farm(userID: string): Promise<weedFarm> {
                 `);
             const now = Date.now();
             if (!account) return 0;
-            const grown = await pool
+            const growing = await pool
                 .many<{
                     id: string;
                     amount: number;
@@ -457,32 +458,33 @@ async function get_weed_farm(userID: string): Promise<weedFarm> {
                 )
                 .catch(() => []);
             const speed = 10000 * (1 / account.weed_grow_speed_upgrade);
-            let topick = 0;
+            let picked = 0;
             const topromise: Promise<any>[] = [];
-            for (const plant of grown) {
+            for (const plant of growing) {
                 const grown = Math.min(
                     Math.floor((now - plant.created_at) / speed),
                     plant.amount,
-                    account.weed_limits_storage - account.weed_storage - topick
-                );
-                if (grown <= 0) continue;
-                topick += grown;
+                    account.weed_limits_storage - account.weed_storage - picked
+                )
+                picked += grown;
                 topromise.push(
                     pool.query(sql`
                         UPDATE weed_growing SET
-                            amount = amount - ${grown}, created_at = ${now} WHERE id = ${plant.id}
+                            amount = amount - ${grown}, created_at = created_at + ${Math.round(grown*speed)} WHERE id = ${plant.id}
                     `)
                 );
+                if (grown != plant.amount) break;
             }
-            if (topick <= 0) return 0;
+            console.log(picked);
+            if (picked <= 0) return 0;
             await Promise.all([
                 pool.query(sql`
                     UPDATE accounts SET
-                        weed_storage = weed_storage + ${topick} WHERE id = ${userID}
+                        weed_storage = weed_storage + ${picked} WHERE id = ${userID}
                 `),
                 ...topromise,
             ]);
-            return topick;
+            return picked;
         },
         sell: async () => {
             const account = await pool.maybeOne<{
