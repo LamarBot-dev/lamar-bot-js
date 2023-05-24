@@ -2,6 +2,7 @@ import getDatabase from "../postgres";
 import Randomstring from "randomstring";
 import { sql } from "slonik";
 import { get_account } from "../postgres/account";
+import humanizeDuration from "humanize-duration";
 
 type weedFarm = {
     buy_seeds: () => Promise<number>;
@@ -218,17 +219,29 @@ async function get_weed_farm(userID: string): Promise<weedFarm> {
                 account.weed_limits_growing - growing
             );
             if (toplant <= 0) return 0;
-
-            await Promise.all([
+            const topromise: Promise<any>[] = [
                 pool.query(sql`
                     UPDATE accounts SET
                         weed_seeds = weed_seeds - ${toplant} WHERE id = ${userID}
                 `),
-                await pool.query(sql`
-                    INSERT INTO weed_growing (id, account_id, amount, created_at)
-                    VALUES (${Randomstring.generate()}, ${userID}, ${toplant}, ${Date.now()});
-                `),
-            ]);
+            ];
+            const weed = await pool.maybeOneFirst<string>(sql`
+                    SELECT id FROM weed_growing WHERE account_id = ${userID} AND amount > 0 LIMIT 1
+                `);
+            if (weed) {
+                pool.query(sql`
+                    UPDATE weed_growing SET
+                        amount = amount + ${toplant} WHERE id = ${weed}
+                `);
+            } else {
+                topromise.push(
+                    pool.query(sql`
+                        INSERT INTO weed_growing (id, account_id, amount, created_at)
+                        VALUES (${Randomstring.generate()}, ${userID}, ${toplant}, ${Date.now()});
+                    `)
+                );
+            }
+            await Promise.all(topromise);
             return toplant;
         },
         pick: async () => {
@@ -250,31 +263,29 @@ async function get_weed_farm(userID: string): Promise<weedFarm> {
                     created_at: number;
                 }>(
                     sql`
-                    SELECT id, amount, created_at FROM weed_growing WHERE account_id = ${userID} AND amount > 0
+                    SELECT id, amount, created_at FROM weed_growing WHERE account_id = ${userID} AND amount > 0 LIMIT 1
                 `
                 )
                 .catch(() => []);
             const speed = 10000 * (1 / account.weed_grow_speed_upgrade);
             let picked = 0;
             const topromise: Promise<any>[] = [];
-            for (const plant of growing) {
-                const grown = Math.min(
-                    Math.floor((now - plant.created_at) / speed),
-                    plant.amount,
-                    account.weed_limits_storage - account.weed_storage - picked
-                );
-                picked += grown;
-                topromise.push(
-                    pool.query(sql`
+            const plant = growing[0];
+            if (!plant) return 0;
+            const grown = Math.min(
+                Math.floor((now - plant.created_at) / speed),
+                plant.amount,
+                account.weed_limits_storage - account.weed_storage - picked
+            );
+            picked += grown;
+            const timetaken = Math.floor(grown * speed);
+            if (grown <= 0) return 0;
+            topromise.push(
+                pool.query(sql`
                         UPDATE weed_growing SET
-                            amount = amount - ${grown}, created_at = created_at + ${Math.ceil(
-                        grown * speed
-                    )} WHERE id = ${plant.id}
+                            amount = amount - ${grown}, created_at = created_at + ${timetaken} WHERE id = ${plant.id}
                     `)
-                );
-                if (grown != plant.amount) break;
-            }
-            console.log(picked);
+            );
             if (picked <= 0) return 0;
             await Promise.all([
                 pool.query(sql`
