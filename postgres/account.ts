@@ -1,6 +1,7 @@
 import { sql } from "slonik";
 import getDatabase from ".";
 import { Discord } from "../discordclient";
+import Randomstring from "randomstring";
 
 export async function init_account(user: Discord.User) {
     const pool = await getDatabase();

@@ -1,6 +1,6 @@
 import { clientID, token } from "./config";
 import { client, Discord } from "./discordclient";
-import { buttoncontrols, weedButtonIDs, weedstart } from "./weed";
+import { buttoncontrols, weedButtonIDs, weedstart } from "./weed/weed";
 import getDatabase from "./postgres";
 import { intro } from "./intromenu";
 import { sql } from "slonik";
