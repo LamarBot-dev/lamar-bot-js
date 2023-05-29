@@ -9,7 +9,7 @@ type commandType = { [key: string]: innerCommandType };
 
 type commandFunctionType = (
     interaction: Discord.ChatInputCommandInteraction<Discord.CacheType>
-) => void;
+) => Promise<void>;
 type innerCommandType = commandFunctionType | commandType;
 
 export type { commandType, commandFunctionType, innerCommandType };

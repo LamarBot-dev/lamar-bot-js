@@ -6,6 +6,7 @@ import { intro } from "./intromenu";
 import { sql } from "slonik";
 import { followplayer, twat, unfollowplayer } from "./lifeinvader";
 import sendChannelMessage from "./lamar-channel-message";
+import { closeFarm } from "./weed/weed";
 const rest = new Discord.REST().setToken(token);
 
 const commands: Discord.RESTPostAPIChatInputApplicationCommandsJSONBody[] = [
@@ -16,14 +17,18 @@ const commands: Discord.RESTPostAPIChatInputApplicationCommandsJSONBody[] = [
     {
         name: "weed",
         description: "Start your weed farm!",
-        // UNCOMMENT WHEN CREATING `/weed close` command
-        // options: [
-        //     {
-        //         name:"close",
-        //         description: "Close your weed farm!",
-        //         type: Discord.ApplicationCommandOptionType.Subcommand,
-        //     }
-        // ]
+        options: [
+            {
+                name: "open",
+                description: "Open your weed farm!",
+                type: Discord.ApplicationCommandOptionType.Subcommand,
+            },
+            {
+                name: "close",
+                description: "Close your weed farm!",
+                type: Discord.ApplicationCommandOptionType.Subcommand,
+            },
+        ],
     },
     {
         name: "lifeinvader",
@@ -96,34 +101,6 @@ client.on("guildCreate", async (guild) => {
         owner: owner.user.tag,
         ownerid: owner.id,
     });
-    try {
-        console.log(
-            `Started refreshing ${commands.length} application (/) commands.`
-        );
-        await rest
-            .get(Discord.Routes.applicationGuildCommands(clientID, guild.id))
-            .then((data: any) => {
-                const promises = [];
-                for (const command of data) {
-                    const deleteUrl: `/${string}` = `${Discord.Routes.applicationGuildCommands(
-                        clientID,
-                        guild.id
-                    )}/${command.id}`;
-                    promises.push(rest.delete(deleteUrl));
-                }
-                return Promise.all(promises);
-            });
-        const data: any = await rest.put(
-            Discord.Routes.applicationGuildCommands(clientID, guild.id),
-            { body: commands }
-        );
-
-        console.log(
-            `Successfully reloaded ${data.length} application (/) commands.`
-        );
-    } catch (error) {
-        console.error(error);
-    }
     guild.channels.cache.forEach((channel) => {
         if (channel.name.includes("lamar-bot") && channel.isTextBased()) {
             sendChannelMessage(channel);
@@ -136,7 +113,21 @@ client.on("ready", async () => {
     console.log("connecting database...");
     await getDatabase();
     console.log("connected!");
-
+    await rest
+        .get(Discord.Routes.applicationCommands(clientID))
+        .then((data: any) => {
+            const promises = [];
+            for (const command of data) {
+                const deleteUrl: `/${string}` = `${Discord.Routes.applicationCommands(
+                    clientID
+                )}/${command.id}`;
+                promises.push(rest.delete(deleteUrl));
+            }
+            return Promise.all(promises);
+        });
+    await rest.put(Discord.Routes.applicationCommands(clientID), {
+        body: commands,
+    });
     process
         .on("unhandledRejection", console.error)
         .on("uncaughtException", console.error);
@@ -168,10 +159,9 @@ client.on("interactionCreate", async (interaction) => {
         `);
         switch (interaction.commandName) {
             case "create":
-                if (!account) {
-                    intro(interaction);
-                } else {
-                    interaction.reply({
+                if (!account) await intro(interaction);
+                else
+                    await interaction.reply({
                         embeds: [
                             new Discord.EmbedBuilder()
                                 .setAuthor({
@@ -190,12 +180,22 @@ client.on("interactionCreate", async (interaction) => {
                         ],
                         ephemeral: true,
                     });
-                }
                 return;
             case "weed":
                 if (account) {
-                    weedstart(interaction);
-                    return;
+                    const Subcommand = interaction.options.getSubcommand();
+                    switch (Subcommand) {
+                        case "open":
+                            weedstart(interaction);
+                            return;
+                        case "close":
+                            await interaction.deferReply({
+                                ephemeral: true,
+                            });
+                            await closeFarm(interaction.user.id);
+                            await interaction.deleteReply();
+                            return;
+                    }
                 }
                 break;
             case "lifeinvader":
@@ -204,24 +204,23 @@ client.on("interactionCreate", async (interaction) => {
                     switch (Subcommand) {
                         case "follow":
                             followplayer(interaction);
-                            break;
+                            return;
                         case "unfollow":
                             unfollowplayer(interaction);
-                            break;
+                            return;
                         case "followers":
-                            break;
+                            return;
                         case "following":
-                            break;
+                            return;
                         case "post":
                             twat(interaction);
-                            break;
+                            return;
                     }
-                    return;
                 }
                 break;
         }
-        if (account) {
-            interaction.reply({
+        if (account)
+            await interaction.reply({
                 embeds: [
                     new Discord.EmbedBuilder()
                         .setAuthor({
@@ -238,8 +237,8 @@ client.on("interactionCreate", async (interaction) => {
                 ],
                 ephemeral: true,
             });
-        } else {
-            interaction.reply({
+        else
+            await interaction.reply({
                 embeds: [
                     new Discord.EmbedBuilder()
                         .setAuthor({
@@ -257,12 +256,12 @@ client.on("interactionCreate", async (interaction) => {
                 ],
                 ephemeral: true,
             });
-        }
+
         return;
     } else if (interaction.type != Discord.InteractionType.MessageComponent)
         return;
     const button = interaction;
-    if (button.member?.user) {
+    if (button.member?.user||button.guildId === null) {
         if (weedButtonIDs.includes(button.customId)) {
             buttoncontrols(button);
         } else {
