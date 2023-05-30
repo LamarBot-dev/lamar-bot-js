@@ -12,6 +12,7 @@ import {
     joinVC,
     playRadio,
     roastvc,
+    saySomethingInVC,
     stopvc,
 } from "./voice channel/vc";
 import errorMessage from "./error_message";
@@ -282,6 +283,9 @@ client.on("interactionCreate", async (interaction) => {
                             return;
                         case "roast":
                             roastvc(interaction);
+                            return;
+                        case "saysomething":
+                            saySomethingInVC(interaction);
                             return;
                     }
                 }

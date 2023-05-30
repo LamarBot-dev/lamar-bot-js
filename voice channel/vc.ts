@@ -16,6 +16,26 @@ import {
 import path from "path";
 import errorMessage from "../error_message";
 import { Discord } from "../discordclient";
+import fs from "fs";
+
+const cleanfolder = path.join(__dirname, "./lines/clean");
+const explicitfolder = path.join(__dirname, "./lines/explicit");
+
+const cleanLines: string[] = [];
+const explicitLines: string[] = [];
+
+fs.promises.readdir(cleanfolder).then((value) => {
+    const converted = value.map((val) => path.join(cleanfolder, val));
+    cleanLines.push(...converted);
+    explicitLines.push(...converted);
+});
+fs.promises
+    .readdir(explicitfolder)
+    .then((value) =>
+        explicitLines.push(
+            ...value.map((val) => path.join(explicitfolder, val))
+        )
+    );
 
 const player = createAudioPlayer({
     behaviors: {
@@ -53,7 +73,12 @@ const runJoinVC = async (
         return 1;
     }
     let connection = getVoiceConnection(interaction.guildId);
-    if (!connection) {
+    if (
+        !connection ||
+        connection.joinConfig.channelId !==
+            interaction.member.voice.channelId ||
+        connection.state.status === "destroyed"
+    ) {
         connection = joinVoiceChannel({
             channelId: interaction.member.voice.channelId,
             guildId: interaction.guildId,
@@ -100,6 +125,22 @@ const joinVC: commandFunctionType = async (interaction) => {
 
 const playRadio: commandFunctionType = async (interaction) => {
     await interaction.deferReply();
+    if (
+        interaction.member instanceof GuildMember &&
+        interaction.member.voice.channel &&
+        !interaction.member.voice.channel.nsfw
+    ) {
+        await interaction.editReply({
+            embeds: [
+                errorMessage(
+                    interaction,
+                    "This command can only be used in an age restricted voice channel.",
+                    null
+                ),
+            ],
+        });
+        return;
+    }
     const connection = await runJoinVC(interaction);
     switch (connection) {
         case 1:
@@ -135,6 +176,71 @@ const playRadio: commandFunctionType = async (interaction) => {
                     iconURL: interaction.user.avatarURL() || undefined,
                 })
                 .setTitle("Playing Radio Los Santos")
+                .setThumbnail(
+                    "https://github.com/Ugric/lamar-bot-js/blob/main/images/infomation%20icon.png?raw=true"
+                )
+                .setImage(
+                    "https://github.com/Ugric/lamar-bot-js/blob/main/images/dancing%20lamar.gif?raw=true"
+                ),
+        ],
+    });
+};
+
+const saySomethingInVC: commandFunctionType = async (interaction) => {
+    await interaction.deferReply();
+    const connection = await runJoinVC(interaction);
+    switch (connection) {
+        case 1:
+            await interaction.editReply({
+                embeds: [
+                    errorMessage(
+                        interaction,
+                        "You must be in a voice channel to use this command.",
+                        null
+                    ),
+                ],
+            });
+            return;
+        case 2:
+            await interaction.editReply({
+                embeds: [
+                    errorMessage(
+                        interaction,
+                        "This command can only be used in a server.",
+                        null
+                    ),
+                ],
+            });
+            return;
+    }
+
+    const allowedLines =
+        interaction.member instanceof GuildMember &&
+        interaction.member.voice.channel &&
+        interaction.member.voice.channel.nsfw
+            ? explicitLines
+            : cleanLines;
+
+    const player = createAudioPlayer();
+    const resource = createAudioResource(
+        allowedLines[Math.floor(Math.random() * allowedLines.length)]
+    );
+    player.play(resource);
+    connection[0].subscribe(player);
+    await interaction.editReply({
+        embeds: [
+            new Discord.EmbedBuilder()
+                .setAuthor({
+                    name: interaction.user.tag,
+                    iconURL: interaction.user.avatarURL() || undefined,
+                })
+                .setTitle(
+                    interaction.channel &&
+                        "nsfw" in interaction.channel &&
+                        interaction.channel.nsfw
+                        ? `Saying some real shit in ${connection[1]}`
+                        : `Saying some real stuff in ${connection[1]}`
+                )
                 .setThumbnail(
                     "https://github.com/Ugric/lamar-bot-js/blob/main/images/infomation%20icon.png?raw=true"
                 )
@@ -297,4 +403,4 @@ const disconnectvc: commandFunctionType = async (interaction) => {
     });
 };
 
-export { joinVC, playRadio, stopvc, disconnectvc, roastvc };
+export { joinVC, playRadio, stopvc, disconnectvc, roastvc, saySomethingInVC };
