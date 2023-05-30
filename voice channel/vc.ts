@@ -150,7 +150,7 @@ const roastvc: commandFunctionType = async (interaction) => {
     const roastreasource = createAudioResource(path.join(__dirname, "./roast/roast.mp3"));
     const roastplayer = createAudioPlayer();
     roastplayer.play(roastreasource);
-    connection[0].subscribe(player);
+    connection[0].subscribe(roastplayer);
     await interaction.editReply({
         content: `Roasting everyone in ${connection[1]}`,
     });
