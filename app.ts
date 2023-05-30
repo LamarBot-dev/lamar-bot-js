@@ -1,4 +1,4 @@
-import { clientID, token } from "./config";
+import { clientID, startup, token } from "./config";
 import { client, Discord } from "./discordclient";
 import { buttoncontrols, weedButtonIDs, weedstart } from "./weed/weed";
 import getDatabase from "./postgres";
@@ -7,6 +7,8 @@ import { sql } from "slonik";
 import { followplayer, twat, unfollowplayer } from "./lifeinvader";
 import sendChannelMessage from "./lamar-channel-message";
 import { closeFarm } from "./weed/weed";
+import { joinVC, playRadio, stopvc } from "./voice channel/vc";
+import errorMessage from "./error_message";
 const rest = new Discord.REST().setToken(token);
 
 const commands: Discord.RESTPostAPIChatInputApplicationCommandsJSONBody[] = [
@@ -85,6 +87,42 @@ const commands: Discord.RESTPostAPIChatInputApplicationCommandsJSONBody[] = [
             },
         ],
     },
+    {
+        name: "vc",
+        description: "voice chat",
+        options: [
+            {
+                name: "join",
+                description: "join a voice channel",
+                type: Discord.ApplicationCommandOptionType.Subcommand,
+            },
+            {
+                name: "saysomething",
+                description: "get lamar to say one of his lines",
+                type: Discord.ApplicationCommandOptionType.Subcommand,
+            },
+            {
+                name: "roast",
+                description: "roast the vc",
+                type: Discord.ApplicationCommandOptionType.Subcommand,
+            },
+            {
+                name: "radio",
+                description: "listen to the radio",
+                type: Discord.ApplicationCommandOptionType.Subcommand,
+            },
+            {
+                name: "stop",
+                description: "stop the current task",
+                type: Discord.ApplicationCommandOptionType.Subcommand,
+            },
+            {
+                name: "leave",
+                description: "leave a voice channel",
+                type: Discord.ApplicationCommandOptionType.Subcommand,
+            },
+        ],
+    },
 ];
 
 console.log(commands);
@@ -113,21 +151,23 @@ client.on("ready", async () => {
     console.log("connecting database...");
     await getDatabase();
     console.log("connected!");
-    await rest
-        .get(Discord.Routes.applicationCommands(clientID))
-        .then((data: any) => {
-            const promises = [];
-            for (const command of data) {
-                const deleteUrl: `/${string}` = `${Discord.Routes.applicationCommands(
-                    clientID
-                )}/${command.id}`;
-                promises.push(rest.delete(deleteUrl));
-            }
-            return Promise.all(promises);
+    if (startup) {
+        await rest
+            .get(Discord.Routes.applicationCommands(clientID))
+            .then((data: any) => {
+                const promises = [];
+                for (const command of data) {
+                    const deleteUrl: `/${string}` = `${Discord.Routes.applicationCommands(
+                        clientID
+                    )}/${command.id}`;
+                    promises.push(rest.delete(deleteUrl));
+                }
+                return Promise.all(promises);
+            });
+        await rest.put(Discord.Routes.applicationCommands(clientID), {
+            body: commands,
         });
-    await rest.put(Discord.Routes.applicationCommands(clientID), {
-        body: commands,
-    });
+    }
     process
         .on("unhandledRejection", console.error)
         .on("uncaughtException", console.error);
@@ -218,6 +258,22 @@ client.on("interactionCreate", async (interaction) => {
                     }
                 }
                 break;
+            case "vc":
+                if (account) {
+                    const Subcommand = interaction.options.getSubcommand();
+                    switch (Subcommand) {
+                        case "join":
+                            joinVC(interaction);
+                            return;
+                        case "radio":
+                            playRadio(interaction);
+                            return;
+                        case "stop":
+                            stopvc(interaction);
+                            return;
+                    }
+                }
+                break;
         }
         if (account)
             await interaction.reply({
@@ -240,19 +296,11 @@ client.on("interactionCreate", async (interaction) => {
         else
             await interaction.reply({
                 embeds: [
-                    new Discord.EmbedBuilder()
-                        .setAuthor({
-                            name: interaction.user.tag,
-                            iconURL: interaction.user.avatarURL() || undefined,
-                        })
-                        .setTitle("You don't have an account!")
-                        .setThumbnail(
-                            "https://github.com/Ugric/lamar-bot-js/blob/main/images/infomation%20icon.png?raw=true"
-                        )
-                        .setImage(
-                            "https://github.com/Ugric/lamar-bot-js/blob/main/images/no%20no%20no.gif?raw=true"
-                        )
-                        .setDescription("Use `/create` to create an account!"),
+                    errorMessage(
+                        interaction,
+                        "You don't have an account!",
+                        "Use `/create` to create an account!"
+                    ),
                 ],
                 ephemeral: true,
             });
@@ -261,12 +309,13 @@ client.on("interactionCreate", async (interaction) => {
     } else if (interaction.type != Discord.InteractionType.MessageComponent)
         return;
     const button = interaction;
-    if (button.member?.user||button.guildId === null) {
+    if (button.member?.user || button.guildId === null) {
         if (weedButtonIDs.includes(button.customId)) {
             buttoncontrols(button);
         } else {
             await button.reply({
                 embeds: [
+                    errorMessage(button, "unknown button!", null),
                     new Discord.EmbedBuilder()
                         .setAuthor({
                             name: button.user.tag,

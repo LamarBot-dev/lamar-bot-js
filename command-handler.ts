@@ -7,9 +7,9 @@ import { Discord } from "./discordclient";
 
 type commandType = { [key: string]: innerCommandType };
 
-type commandFunctionType = (
+type commandFunctionType<T=void> = (
     interaction: Discord.ChatInputCommandInteraction<Discord.CacheType>
-) => Promise<void>;
+) => Promise<T>;
 type innerCommandType = commandFunctionType | commandType;
 
 export type { commandType, commandFunctionType, innerCommandType };

@@ -11,6 +11,7 @@ const client = new Discord.Client({
         GatewayIntentBits.GuildIntegrations,
         GatewayIntentBits.GuildMessageReactions,
         GatewayIntentBits.GuildMessageTyping,
+        GatewayIntentBits.GuildVoiceStates,
     ],
     partials: [
         Partials.Channel,
@@ -18,7 +19,7 @@ const client = new Discord.Client({
         Partials.Message,
         Partials.Reaction,
         Partials.User,
-        Partials.GuildScheduledEvent
+        Partials.GuildScheduledEvent,
     ],
 });
 export { Discord, client };
