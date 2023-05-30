@@ -89,12 +89,12 @@ const playRadio: commandFunctionType = async (interaction) => {
     const connection = await runJoinVC(interaction);
     switch (connection) {
         case 1:
-            await interaction.reply({
+            await interaction.editReply({
                 content: "You must be in a voice channel to use this command.",
             });
             return;
         case 2:
-            await interaction.reply({
+            await interaction.editReply({
                 content: "This command can only be used in a server.",
             });
             return;
@@ -137,12 +137,12 @@ const roastvc: commandFunctionType = async (interaction) => {
     const connection = await runJoinVC(interaction);
     switch (connection) {
         case 1:
-            await interaction.reply({
+            await interaction.editReply({
                 content: "You must be in a voice channel to use this command.",
             });
             return;
         case 2:
-            await interaction.reply({
+            await interaction.editReply({
                 content: "This command can only be used in a server.",
             });
             return;
