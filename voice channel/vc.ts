@@ -128,9 +128,58 @@ const stopvc: commandFunctionType = async (interaction) => {
     const dispatch = connection.subscribe(createAudioPlayer());
     dispatch?.unsubscribe();
     await interaction.editReply({
-        content: "Left voice channel.",
+        content: "Stopped playing audio.",
+    });
+};
+
+const roastvc: commandFunctionType = async (interaction) => {
+     await interaction.deferReply();
+    const connection = await runJoinVC(interaction);
+    switch (connection) {
+        case 1:
+            await interaction.reply({
+                content: "You must be in a voice channel to use this command.",
+            });
+            return;
+        case 2:
+            await interaction.reply({
+                content: "This command can only be used in a server.",
+            });
+            return;
+    }
+    const roastreasource = createAudioResource(path.join(__dirname, "./roast/roast.mp3"));
+    const roastplayer = createAudioPlayer();
+    roastplayer.play(roastreasource);
+    connection[0].subscribe(player);
+    await interaction.editReply({
+        content: `Roasting everyone in ${connection[1]}`,
+    });
+}
+
+const disconnectvc: commandFunctionType = async (interaction) => {
+    await interaction.deferReply();
+    if (
+        !(interaction.member instanceof GuildMember) ||
+        !interaction.guildId ||
+        !interaction.guild
+    ) {
+        await interaction.editReply({
+            content: "This command can only be used in a server.",
+        });
+        return;
+    }
+    const connection = getVoiceConnection(interaction.guildId);
+    if (!connection) {
+        await interaction.editReply({
+            content: "I am not in a voice channel.",
+        });
+        return;
+    }
+    connection.destroy();
+    await interaction.editReply({
+        content: "Disconnected from voice channel.",
     });
 };
             
 
-export { joinVC, playRadio, stopvc };
+export { joinVC, playRadio, stopvc, disconnectvc, roastvc };

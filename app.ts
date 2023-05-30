@@ -7,7 +7,13 @@ import { sql } from "slonik";
 import { followplayer, twat, unfollowplayer } from "./lifeinvader";
 import sendChannelMessage from "./lamar-channel-message";
 import { closeFarm } from "./weed/weed";
-import { joinVC, playRadio, stopvc } from "./voice channel/vc";
+import {
+    disconnectvc,
+    joinVC,
+    playRadio,
+    roastvc,
+    stopvc,
+} from "./voice channel/vc";
 import errorMessage from "./error_message";
 const rest = new Discord.REST().setToken(token);
 
@@ -270,6 +276,12 @@ client.on("interactionCreate", async (interaction) => {
                             return;
                         case "stop":
                             stopvc(interaction);
+                            return;
+                        case "leave":
+                            disconnectvc(interaction);
+                            return;
+                        case "roast":
+                            roastvc(interaction);
                             return;
                     }
                 }
