@@ -21,8 +21,9 @@ We're also cooking up some surprises that'll add even more depth and excitement 
 So, grab your crew, load up your weapons, and let's dive head fuckin first into the criminal underworld. The city is waiting, nigga! Let's make some paper! 💥💰🚗`;
 
 async function sendChannelMessage(channel: Discord.TextBasedChannel) {
+    let message: Discord.Message<boolean>;
     if ("nsfw" in channel && channel.nsfw) {
-        return channel.send({
+        message = await channel.send({
             embeds: [
                 new Discord.EmbedBuilder()
                     .setAuthor({
@@ -33,18 +34,20 @@ async function sendChannelMessage(channel: Discord.TextBasedChannel) {
                     .setDescription(ChannelMessageExplicit),
             ],
         });
+    } else {
+        message = await channel.send({
+            embeds: [
+                new Discord.EmbedBuilder()
+                    .setAuthor({
+                        name: "Lamar",
+                        iconURL:
+                            "https://github.com/Ugric/lamar-bot-js/blob/main/images/lamar%20profile.PNG?raw=true",
+                    })
+                    .setDescription(ChannelMessage),
+            ],
+        });
     }
-    return channel.send({
-        embeds: [
-            new Discord.EmbedBuilder()
-                .setAuthor({
-                    name: "Lamar",
-                    iconURL:
-                        "https://github.com/Ugric/lamar-bot-js/blob/main/images/lamar%20profile.PNG?raw=true",
-                })
-                .setDescription(ChannelMessage),
-        ],
-    });
+    await message.pin("Lamar's Message")
 }
 
 export default sendChannelMessage;

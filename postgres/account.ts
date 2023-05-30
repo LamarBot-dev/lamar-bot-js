@@ -33,9 +33,9 @@ type account = {
 
 export async function get_account(userID: string): Promise<account | null> {
     const pool = await getDatabase();
-    const account = await pool.maybeOne(sql`
-        SELECT * FROM accounts WHERE id = ${userID}
-    `);
+    const account = await pool.maybeOne(
+        sql`SELECT id FROM accounts WHERE id = ${userID}`
+    );
     if (!account) return null;
     const accountobj: account = {
         id: userID,
@@ -56,7 +56,8 @@ export async function get_account(userID: string): Promise<account | null> {
                         sql`
                     SELECT follower_id FROM followers WHERE following_id = ${userID}
                 `
-                    ).catch(() => []);
+                    )
+                    .catch(() => []);
                 return followers as unknown as string[];
             },
             following: async () => {
@@ -78,7 +79,7 @@ export async function get_account(userID: string): Promise<account | null> {
                 await pool.query(sql`
                     DELETE FROM followers WHERE follower_id = ${userID} AND following_id = ${id}
                 `);
-            }
+            },
         },
     };
     return accountobj;

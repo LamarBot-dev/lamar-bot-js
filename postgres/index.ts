@@ -21,7 +21,7 @@ async function getDatabase() {
                     weed_limits_storage INT not NULL DEFAULT 30
                 )`
             );
-             
+
             await pool.query(
                 sql`CREATE TABLE IF NOT EXISTS transactions (
                     id TEXT PRIMARY KEY not NULL,
@@ -31,7 +31,7 @@ async function getDatabase() {
                     created_at BIGINT not NULL
                 )`
             );
-            
+
             await pool.query(
                 sql`CREATE TABLE IF NOT EXISTS followers (
                     follower_id TEXT not NULL,
@@ -45,10 +45,13 @@ async function getDatabase() {
                     id TEXT PRIMARY KEY not NULL,
                     account_id TEXT not NULL,
                     amount INT not NULL,
-                    created_at BIGINT not NULL
+                    created_at BIGINT not NULL,
+                    notified BOOLEAN not NULL DEFAULT TRUE
                 )`
             );
-            
+            await pool.query(
+                sql`ALTER TABLE weed_growing ADD notified BOOLEAN not NULL DEFAULT TRUE`
+            );
         })();
     }
     return pool;

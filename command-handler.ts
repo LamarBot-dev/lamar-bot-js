@@ -1,10 +1,5 @@
 import { Discord } from "./discordclient";
 
-// 0 = command not found
-// 1 = command found and executed
-// 2 = no prefix
-// 3 = bot
-
 type commandType = { [key: string]: innerCommandType };
 
 type commandFunctionType<T=void> = (

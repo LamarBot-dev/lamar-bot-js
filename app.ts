@@ -214,7 +214,7 @@ client.on("ready", async () => {
 
 client.on("channelCreate", async (channel) => {
     if (channel.name.includes("lamar-bot") && channel.isTextBased()) {
-        sendChannelMessage(channel);
+        await sendChannelMessage(channel);
     }
 });
 
@@ -226,7 +226,7 @@ client.on("channelUpdate", async (oldChannel, newChannel) => {
         newChannel.isTextBased() &&
         newChannel.nsfw != oldChannel.nsfw
     ) {
-        sendChannelMessage(newChannel);
+        await sendChannelMessage(newChannel);
     }
 });
 
