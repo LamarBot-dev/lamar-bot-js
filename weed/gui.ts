@@ -2,10 +2,8 @@ import humanizeDuration from "humanize-duration";
 import { Discord } from "../discordclient";
 import { get_account } from "../postgres/account";
 import get_weed_farm from "./calculate";
+import { numberWithCommas } from "../money/money";
 
-function numberWithCommas(x: number) {
-    return String(x).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-}
 
 const upgradeembedrenderer = async (author: Discord.User) => {
     const account = await get_account(author.id);

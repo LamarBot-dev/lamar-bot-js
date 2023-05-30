@@ -16,6 +16,8 @@ import {
     stopvc,
 } from "./voice channel/vc";
 import errorMessage from "./error_message";
+import { balance } from "./money/money";
+
 const rest = new Discord.REST().setToken(token);
 
 const commands: Discord.RESTPostAPIChatInputApplicationCommandsJSONBody[] = [
@@ -127,6 +129,36 @@ const commands: Discord.RESTPostAPIChatInputApplicationCommandsJSONBody[] = [
                 name: "leave",
                 description: "leave a voice channel",
                 type: Discord.ApplicationCommandOptionType.Subcommand,
+            },
+        ],
+    },
+    {
+        name: "money",
+        description: "Control your money!",
+        options: [
+            {
+                name: "balance",
+                description: "Read your balance!",
+                type: Discord.ApplicationCommandOptionType.Subcommand,
+            },
+            {
+                name: "pay",
+                description: "Pay someone!",
+                type: Discord.ApplicationCommandOptionType.Subcommand,
+                options: [
+                    {
+                        name: "user",
+                        description: "The user to pay!",
+                        type: Discord.ApplicationCommandOptionType.User,
+                        required: true,
+                    },
+                    {
+                        name: "amount",
+                        description: "The amount to pay!",
+                        type: Discord.ApplicationCommandOptionType.Integer,
+                        required: true,
+                    },
+                ],
             },
         ],
     },
@@ -266,26 +298,34 @@ client.on("interactionCreate", async (interaction) => {
                 }
                 break;
             case "vc":
+                const Subcommand = interaction.options.getSubcommand();
+                switch (Subcommand) {
+                    case "join":
+                        joinVC(interaction);
+                        return;
+                    case "radio":
+                        playRadio(interaction);
+                        return;
+                    case "stop":
+                        stopvc(interaction);
+                        return;
+                    case "leave":
+                        disconnectvc(interaction);
+                        return;
+                    case "roast":
+                        roastvc(interaction);
+                        return;
+                    case "saysomething":
+                        saySomethingInVC(interaction);
+                        return;
+                }
+                break;
+            case "money":
                 if (account) {
                     const Subcommand = interaction.options.getSubcommand();
                     switch (Subcommand) {
-                        case "join":
-                            joinVC(interaction);
-                            return;
-                        case "radio":
-                            playRadio(interaction);
-                            return;
-                        case "stop":
-                            stopvc(interaction);
-                            return;
-                        case "leave":
-                            disconnectvc(interaction);
-                            return;
-                        case "roast":
-                            roastvc(interaction);
-                            return;
-                        case "saysomething":
-                            saySomethingInVC(interaction);
+                        case "balance":
+                            balance(interaction);
                             return;
                     }
                 }
