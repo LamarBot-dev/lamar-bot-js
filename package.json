@@ -6,6 +6,7 @@
         "discord.js": "^14.11.0",
         "dotenv": "^16.0.3",
         "edit-json-file": "^1.6.0",
+        "ffmpeg-static": "^5.1.0",
         "humanize-duration": "^3.28.0",
         "libsodium-wrappers": "^0.7.11",
         "randomstring": "^1.2.3",
