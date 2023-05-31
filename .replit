@@ -1,5 +1,4 @@
 run = "yarn start"
-hidden = [".build", ".config"]
 
 [packager]
 language = "nodejs"
@@ -24,4 +23,4 @@ pattern = "**/{*.ts,*.js,*.tsx,*.jsx}"
 start = "typescript-language-server --stdio"
 
 [deployment]
-run = ["sh", "-c", "yarn start"]
+run = ["yarn start"]
