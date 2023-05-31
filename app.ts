@@ -211,6 +211,7 @@ client.on("ready", async () => {
     await getDatabase();
     console.log("connected!");
     if (startup) {
+        console.log("starting up... uploading slash commands");
         await rest
             .get(Discord.Routes.applicationCommands(clientID))
             .then((data: any) => {
