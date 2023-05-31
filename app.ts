@@ -17,6 +17,7 @@ import {
 } from "./voice channel/vc";
 import errorMessage from "./error_message";
 import { balance } from "./money/money";
+import {roastPlayer} from "./lamar services/roast"
 
 const rest = new Discord.REST().setToken(token);
 
@@ -160,6 +161,25 @@ const commands: Discord.RESTPostAPIChatInputApplicationCommandsJSONBody[] = [
                     },
                 ],
             },
+        ],
+    },
+    {
+        name: "lamar",
+        description: "Access lamar services!",
+        options: [
+            {
+                name: "roast",
+                description: "Get lamar to roast someone (costs $50,000)",
+                type: Discord.ApplicationCommandOptionType.Subcommand,
+                options: [
+                    {
+                        name: "user",
+                        description: "the user to roast",
+                        type: Discord.ApplicationCommandOptionType.User,
+                        required: true,
+                    },
+                ],
+            }
         ],
     },
 ];
@@ -326,6 +346,16 @@ client.on("interactionCreate", async (interaction) => {
                     switch (Subcommand) {
                         case "balance":
                             balance(interaction);
+                            return;
+                    }
+                }
+                break;
+            case "lamar":
+                if (account) {
+                    const Subcommand = interaction.options.getSubcommand();
+                    switch (Subcommand) {
+                        case "roast":
+                            roastPlayer(interaction);
                             return;
                     }
                 }

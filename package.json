@@ -1,6 +1,7 @@
 {
     "dependencies": {
         "@discordjs/voice": "^0.16.0",
+        "@total-typescript/ts-reset": "^0.4.2",
         "@types/humanize-duration": "^3.27.1",
         "@types/randomstring": "^1.1.8",
         "discord.js": "^14.11.0",

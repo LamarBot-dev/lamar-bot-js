@@ -51,7 +51,7 @@ async function getDatabase() {
             );
             await pool.query(
                 sql`ALTER TABLE weed_growing ADD notified BOOLEAN not NULL DEFAULT TRUE`
-            );
+            ).catch(()=>{});
         })();
     }
     return pool;
