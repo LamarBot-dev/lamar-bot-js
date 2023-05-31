@@ -22,7 +22,10 @@ export async function init_account(user: Discord.User) {
 
 type account = {
     id: string;
-    money: () => Promise<number>;
+    money: {
+        balance: () => Promise<number>;
+        transaction: (amount: number, comment: string) => Promise<boolean>;
+    };
     lifeinvader: {
         follow: (id: string) => Promise<void>;
         unfollow: (id: string) => Promise<void>;
@@ -39,15 +42,27 @@ export async function get_account(userID: string): Promise<account | null> {
     if (!account) return null;
     const accountobj: account = {
         id: userID,
-        money: async () => {
-            const transactions = await pool
-                .oneFirst<number>(
-                    sql`
+        money: {
+            balance: async () => {
+                const transactions = await pool
+                    .oneFirst<number>(
+                        sql`
                 SELECT SUM(amount) FROM transactions WHERE account_id = ${userID}
             `
-                )
-                .catch(() => 0);
-            return transactions;
+                    )
+                    .catch(() => 0);
+                return transactions;
+            },
+            transaction: async (amount, comment) => {
+                const balance = await accountobj.money.balance();
+                if (balance + amount < 0) {
+                    return false;
+                }
+                await pool.query(sql`
+                    INSERT INTO transactions (id, account_id, amount, reference, created_at) VALUES (${Randomstring.generate()}, ${userID}, ${amount}, ${comment}, ${Date.now()})
+                `);
+                return true;
+            },
         },
         lifeinvader: {
             followers: async () => {

@@ -169,7 +169,7 @@ const commands: Discord.RESTPostAPIChatInputApplicationCommandsJSONBody[] = [
         options: [
             {
                 name: "roast",
-                description: "Get lamar to roast someone (costs $50,000)",
+                description: "Get lamar to roast someone (costs $100,000)",
                 type: Discord.ApplicationCommandOptionType.Subcommand,
                 options: [
                     {

@@ -91,7 +91,7 @@ async function get_weed_farm(userID: string): Promise<weedFarm> {
                     SELECT weed_grow_speed_upgrade FROM accounts WHERE id = ${userID}
                     `);
                 const cost = speed_upgrade ** 2 * 100;
-                const balance = await accountobj.money();
+                const balance = await accountobj.money.balance();
                 if (balance >= cost) {
                     await Promise.all([
                         pool.query(sql`
@@ -112,7 +112,7 @@ async function get_weed_farm(userID: string): Promise<weedFarm> {
                     SELECT weed_limits_seeds FROM accounts WHERE id = ${userID}
                 `);
                 const cost = seeds * 3;
-                const balance = await accountobj.money();
+                const balance = await accountobj.money.balance();
                 if (balance >= cost) {
                     await Promise.all([
                         pool.query(sql`
@@ -133,7 +133,7 @@ async function get_weed_farm(userID: string): Promise<weedFarm> {
                     SELECT weed_limits_growing FROM accounts WHERE id = ${userID}
                 `);
                 const cost = growing * 3;
-                const balance = await accountobj.money();
+                const balance = await accountobj.money.balance();
                 if (balance >= cost) {
                     await Promise.all([
                         pool.query(sql`
@@ -154,7 +154,7 @@ async function get_weed_farm(userID: string): Promise<weedFarm> {
                     SELECT weed_limits_storage FROM accounts WHERE id = ${userID}
                 `);
                 const cost = storage * 3;
-                const balance = await accountobj.money();
+                const balance = await accountobj.money.balance();
                 if (balance >= cost) {
                     await Promise.all([
                         pool.query(sql`
@@ -182,7 +182,7 @@ async function get_weed_farm(userID: string): Promise<weedFarm> {
                     SELECT weed_seeds, weed_storage, weed_limits_seeds, weed_limits_growing, weed_limits_storage FROM accounts WHERE id = ${userID} LIMIT 1
                 `);
             if (!account) return 0;
-            const balance = await accountobj.money();
+            const balance = await accountobj.money.balance();
             const tobuy = Math.min(
                 account.weed_limits_seeds - account.weed_seeds,
                 balance

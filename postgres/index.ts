@@ -18,7 +18,8 @@ async function getDatabase() {
                     weed_storage INT not NULL DEFAULT 0,
                     weed_limits_seeds INT not NULL DEFAULT 20,
                     weed_limits_growing INT not NULL DEFAULT 10,
-                    weed_limits_storage INT not NULL DEFAULT 30
+                    weed_limits_storage INT not NULL DEFAULT 30,
+                    weed_notified BOOLEAN not NULL DEFAULT FALSE
                 )`
             );
 
@@ -45,13 +46,14 @@ async function getDatabase() {
                     id TEXT PRIMARY KEY not NULL,
                     account_id TEXT not NULL,
                     amount INT not NULL,
-                    created_at BIGINT not NULL,
-                    notified BOOLEAN not NULL DEFAULT TRUE
+                    created_at BIGINT not NULL
                 )`
             );
-            await pool.query(
-                sql`ALTER TABLE weed_growing ADD notified BOOLEAN not NULL DEFAULT TRUE`
-            ).catch(()=>{});
+            await pool
+                .query(
+                    sql`ALTER TABLE accounts ADD weed_notified BOOLEAN not NULL DEFAULT FALSE`
+                )
+                .catch(() => {});
         })();
     }
     return pool;

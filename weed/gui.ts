@@ -70,7 +70,7 @@ const weedembedrenderer = async (author: Discord.User) => {
         storagelimit,
         speedlimit,
     ] = await Promise.all([
-        account.money(),
+        account.money.balance(),
         weed.count.seeds(),
         weed.count.growing(),
         weed.count.storage(),

@@ -125,22 +125,6 @@ const joinVC: commandFunctionType = async (interaction) => {
 
 const playRadio: commandFunctionType = async (interaction) => {
     await interaction.deferReply();
-    if (
-        interaction.member instanceof GuildMember &&
-        interaction.member.voice.channel &&
-        !interaction.member.voice.channel.nsfw
-    ) {
-        await interaction.editReply({
-            embeds: [
-                errorMessage(
-                    interaction,
-                    "This command can only be used in an age restricted voice channel.",
-                    null
-                ),
-            ],
-        });
-        return;
-    }
     const connection = await runJoinVC(interaction);
     switch (connection) {
         case 1:
@@ -214,12 +198,12 @@ const saySomethingInVC: commandFunctionType = async (interaction) => {
             return;
     }
 
-    const allowedLines =
-        interaction.member instanceof GuildMember &&
-        interaction.member.voice.channel &&
-        interaction.member.voice.channel.nsfw
-            ? explicitLines
-            : cleanLines;
+    const allowedLines = explicitLines;
+        // interaction.member instanceof GuildMember &&
+        // interaction.member.voice.channel &&
+        // interaction.member.voice.channel.nsfw
+        //     ? explicitLines
+        //     : cleanLines;
 
     const player = createAudioPlayer();
     const resource = createAudioResource(
@@ -304,22 +288,6 @@ const stopvc: commandFunctionType = async (interaction) => {
 
 const roastvc: commandFunctionType = async (interaction) => {
     await interaction.deferReply();
-    if (
-        interaction.member instanceof GuildMember &&
-        interaction.member.voice.channel &&
-        !interaction.member.voice.channel.nsfw
-    ) {
-        await interaction.editReply({
-            embeds: [
-                errorMessage(
-                    interaction,
-                    "This command can only be used in an age restricted voice channel.",
-                    null
-                ),
-            ],
-        });
-        return;
-    }
     const connection = await runJoinVC(interaction);
     switch (connection) {
         case 1:
