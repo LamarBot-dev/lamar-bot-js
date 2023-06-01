@@ -12,6 +12,7 @@ type weedFarm = {
     count: {
         seeds: () => Promise<number>;
         growing: () => Promise<number>;
+        fully_grown: () => Promise<boolean>;
         storage: () => Promise<number>;
     };
     limits: {
@@ -32,7 +33,7 @@ async function get_weed_farm(userID: string): Promise<weedFarm> {
     const pool = await getDatabase();
     const accountobj = await get_account(userID);
     if (!accountobj) throw new Error("account not found");
-    return {
+    const weedOBJ: weedFarm = {
         count: {
             seeds: async () => {
                 const seeds = await pool.oneFirst<number>(
@@ -51,6 +52,40 @@ async function get_weed_farm(userID: string): Promise<weedFarm> {
                     )
                     .catch(() => 0);
                 return growing || 0;
+            },
+            fully_grown: async () => {
+                const account = await pool.maybeOne<{
+                    weed_seeds: number;
+                    weed_storage: number;
+                    weed_grow_speed_upgrade: number;
+                    weed_limits_seeds: number;
+                    weed_limits_storage: number;
+                }>(sql`
+                    SELECT weed_seeds, weed_storage, weed_grow_speed_upgrade, weed_limits_seeds, weed_limits_storage FROM accounts WHERE id = ${userID} LIMIT 1
+                `);
+                const now = Date.now();
+                if (!account) return false;
+                const growing = await pool
+                    .many<{
+                        id: string;
+                        amount: number;
+                        created_at: number;
+                    }>(
+                        sql`
+                    SELECT id, amount, created_at FROM weed_growing WHERE account_id = ${userID} AND amount > 0 LIMIT 1
+                `
+                    )
+                    .catch(() => []);
+                const speed = 10000 * (1 / account.weed_grow_speed_upgrade);
+                const plant = growing[0];
+                if (!plant) return false;
+                const grown = Math.min(
+                    Math.floor((now - plant.created_at) / speed),
+                    plant.amount,
+                    account.weed_limits_storage - account.weed_storage
+                );
+                if (grown <= 0) return false;
+                return grown >= plant.amount;
             },
             storage: async () => {
                 const storage = await pool.oneFirst<number>(sql`
@@ -241,6 +276,11 @@ async function get_weed_farm(userID: string): Promise<weedFarm> {
                     `)
                 );
             }
+            topromise.push(
+                pool.query(
+                    sql`UPDATE accounts SET weed_notified = false WHERE id = ${userID}`
+                )
+            );
             await Promise.all(topromise);
             return toplant;
         },
@@ -323,6 +363,7 @@ async function get_weed_farm(userID: string): Promise<weedFarm> {
             return tosell;
         },
     };
+    return weedOBJ;
 }
 
 export default get_weed_farm;

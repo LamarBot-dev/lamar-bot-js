@@ -4,6 +4,7 @@ import { Discord } from "../discordclient";
 import { get_account } from "../postgres/account";
 import get_weed_farm from "./calculate";
 import { upgradeembedrenderer, weedembedrenderer } from "./gui";
+import "./notifications";
 
 const referencetouser: Record<string, string> = {};
 const weedmenu: Record<string, Discord.Message<boolean>> = {};

@@ -19,6 +19,10 @@ const upgradeembedrenderer = async (author: Discord.User) => {
     const newspeed = 10000 * (1 / (speedlimit + 1));
     return new Discord.EmbedBuilder()
         .setTitle("UPGRADES")
+        .setAuthor({
+            name: author.tag,
+            iconURL: author.avatarURL() || undefined,
+        })
         .addFields([
             {
                 name: "SEED LIMIT",
