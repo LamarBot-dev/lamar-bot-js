@@ -84,6 +84,19 @@ const pay: commandFunctionType = async (interaction) => {
             ],
         });
         return;
+    } else if (amount == 0) {
+        await interaction.editReply({
+            embeds: [
+                new Discord.EmbedBuilder()
+                    .setTitle("Maze Bank")
+                    .setDescription(`You can't pay $0`)
+                    .setColor("#ff0000")
+                    .setThumbnail(
+                        "https://github.com/LamarBot-dev/lamar-bot-js/blob/main/images/maze%20bank%20logo.jpg?raw=true"
+                    ),
+            ],
+        });
+        return;
     } else if (amount > money) {
         await interaction.editReply({
             embeds: [
