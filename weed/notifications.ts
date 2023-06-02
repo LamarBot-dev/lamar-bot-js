@@ -6,33 +6,29 @@ import { Discord, client } from "../discordclient";
 setInterval(async () => {
     const pool = await getDatabase();
     const accounts = await pool
-        .manyFirst<string>(
-            sql`
-        SELECT id FROM accounts WHERE NOT weed_notified
-    `
-        )
+        .manyFirst<string>(sql`SELECT id FROM accounts WHERE NOT weed_notified`)
         .catch(() => []);
+    const time = Date.now();
     accounts.forEach(async (id) => {
         const weed = await get_weed_farm(id);
         if (!(await weed.count.fully_grown())) return;
         const user = await client.users.fetch(id);
-        pool.query(sql`UPDATE accounts SET weed_notified = true WHERE id = ${id}`);
+        pool.query(
+            sql`UPDATE accounts SET weed_notified = true WHERE id = ${id}`
+        );
         user.send({
             embeds: [
                 new Discord.EmbedBuilder()
                     .setTitle("Weed finished growing")
-                    .setAuthor({
-                        name: user.tag,
-                        iconURL: user.avatarURL() || undefined,
-                    })
                     .setDescription(
                         `Your weed has finished growing, you can pick it now`
                     )
                     .setColor("#047000")
                     .setThumbnail(
                         "https://github.com/Ugric/lamar-bot-js/blob/main/images/weed.png?raw=true&nocache=1"
-                    ),
+                    )
+                    .setTimestamp(time),
             ],
         });
     });
-}, 60000);
+}, 10000);

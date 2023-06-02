@@ -16,7 +16,7 @@ import {
     stopvc,
 } from "./voice channel/vc";
 import errorMessage from "./error_message";
-import { balance } from "./money/money";
+import { balance, pay } from "./money/money";
 import {roastPlayer} from "./lamar services/roast"
 
 const rest = new Discord.REST().setToken(token);
@@ -347,6 +347,9 @@ client.on("interactionCreate", async (interaction) => {
                     switch (Subcommand) {
                         case "balance":
                             balance(interaction);
+                            return;
+                        case "pay":
+                            pay(interaction);
                             return;
                     }
                 }
