@@ -17,7 +17,8 @@ import {
 } from "./voice channel/vc";
 import errorMessage from "./error_message";
 import { balance, pay } from "./money/money";
-import {roastPlayer} from "./lamar services/roast"
+import { roastPlayer } from "./lamar services/roast";
+import sendMessage from "./anonymous/sendMessage";
 
 const rest = new Discord.REST().setToken(token);
 
@@ -179,7 +180,26 @@ const commands: Discord.RESTPostAPIChatInputApplicationCommandsJSONBody[] = [
                         required: true,
                     },
                 ],
-            }
+            },
+        ],
+    },
+    {
+        name: "anonymous",
+        description:
+            "send an anonymous message to someone (costs $100,000)",
+        options: [
+            {
+                name: "user",
+                description: "the user to send the message to",
+                type: Discord.ApplicationCommandOptionType.User,
+                required: true,
+            },
+            {
+                name: "message",
+                description: "the message to send",
+                type: Discord.ApplicationCommandOptionType.String,
+                required: true,
+            },
         ],
     },
 ];
@@ -281,6 +301,11 @@ client.on("interactionCreate", async (interaction) => {
                         ephemeral: true,
                     });
                 return;
+            case "anonymous":
+                if (account) {
+                    sendMessage(interaction);
+                    return;
+                }
             case "weed":
                 if (account) {
                     const Subcommand = interaction.options.getSubcommand();

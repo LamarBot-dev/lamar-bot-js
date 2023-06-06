@@ -1,9 +1,7 @@
 import { Discord } from "./discordclient";
 import { snooze } from "./snooze";
 import { commandFunctionType } from "./command-handler";
-import getDatabase from "./postgres";
 import { init_account } from "./postgres/account";
-import { clientID } from "./config";
 
 const inintro: string[] = [];
 export const intro: commandFunctionType = async (message) => {

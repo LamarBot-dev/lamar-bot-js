@@ -5,7 +5,7 @@ import errorMessage from "../error_message";
 import { get_account } from "../postgres/account";
 import { snooze } from "../snooze";
 
-const roasting: Record<string, true> = {}
+export const roasting: Record<string, true> = {};
 
 const roast = async (user: Discord.User) => {
     await user.send({
@@ -52,7 +52,7 @@ const roast = async (user: Discord.User) => {
                 .setDescription(`Man fuck you, I'll see you at work.`),
         ],
     });
-    await snooze(1000)
+    await snooze(1000);
     typingmessage = await user.send({
         embeds: [
             new Discord.EmbedBuilder().setDescription(`Lamar is typing...`),
@@ -67,10 +67,12 @@ const roast = async (user: Discord.User) => {
                     iconURL:
                         "https://github.com/Ugric/lamar-bot-js/blob/main/images/lamar%20profile.PNG?raw=true",
                 })
-                .setDescription(`Ah, nigga don't hate me cause I'm beautiful nigga`),
+                .setDescription(
+                    `Ah, nigga don't hate me cause I'm beautiful nigga`
+                ),
         ],
     });
-    await snooze(1000)
+    await snooze(1000);
     typingmessage = await user.send({
         embeds: [
             new Discord.EmbedBuilder().setDescription(`Lamar is typing...`),
@@ -98,7 +100,7 @@ const roast = async (user: Discord.User) => {
             ),
         ],
     });
-    
+
     await snooze(1000);
     typingmessage = await user.send({
         embeds: [
@@ -115,7 +117,7 @@ const roast = async (user: Discord.User) => {
             new Discord.EmbedBuilder().setDescription(`you are typing...`),
         ],
     });
-    
+
     await snooze(5000);
     await typingmessage.edit({
         embeds: [
@@ -131,7 +133,10 @@ const roast = async (user: Discord.User) => {
     await user.send({
         embeds: [
             new Discord.EmbedBuilder()
-                .setDescription(`***Barber shops are now available***`),
+                .setDescription(`***Barber shops are now available***`)
+                .setThumbnail(
+                    "https://github.com/Ugric/lamar-bot-js/blob/main/images/infomation%20icon.png?raw=true"
+                ),
         ],
     });
 };
@@ -140,10 +145,19 @@ const roastPlayer: commandFunctionType = async (interaction) => {
     await interaction.deferReply({
         ephemeral: true,
     });
-    const userID = interaction.member?.user.id;
-    if (!userID) return;
+    const userID = interaction.user.id;
     const account = await get_account(userID);
-    if (!account) return;
+    if (!account) {
+        await interaction.editReply({
+            embeds: [
+                errorMessage(
+                    interaction,
+                    "You need to have an account to roast someone"
+                ),
+            ],
+        });
+        return;
+    }
     const playerToRoast = interaction.options.getUser("user");
     if (!playerToRoast) {
         await interaction.editReply({
@@ -178,18 +192,15 @@ const roastPlayer: commandFunctionType = async (interaction) => {
     if (roasting[playerToRoast.id]) {
         await interaction.editReply({
             embeds: [
-                errorMessage(
-                    interaction,
-                    "The player you are trying to roast is already being roasted"
-                ),
+                errorMessage(interaction, "They are already being contacted"),
             ],
         });
         return;
     }
-        const charged = await account.money.transaction(
-            -100000,
-            `Roast ${playerToRoast.tag}`
-        );
+    const charged = await account.money.transaction(
+        -100000,
+        `Roast ${playerToRoast.tag}`
+    );
     if (!charged) {
         await interaction.editReply({
             embeds: [
@@ -215,10 +226,10 @@ const roastPlayer: commandFunctionType = async (interaction) => {
                 .setColor("#00ff00"),
         ],
     });
-    roasting[playerToRoast.id] = true
-    await roast(playerToRoast)
-    delete roasting[playerToRoast.id]
-    await interaction.followUp({
+    roasting[playerToRoast.id] = true;
+    await roast(playerToRoast);
+    delete roasting[playerToRoast.id];
+    await interaction.editReply({
         embeds: [
             new Discord.EmbedBuilder()
                 .setAuthor({
@@ -226,12 +237,9 @@ const roastPlayer: commandFunctionType = async (interaction) => {
                     iconURL:
                         "https://github.com/Ugric/lamar-bot-js/blob/main/images/lamar%20profile.PNG?raw=true",
                 })
-                .setDescription(
-                    `Roasted!`
-                )
+                .setDescription(`Roasted ${playerToRoast.tag}!`)
                 .setColor("#00ff00"),
         ],
-        ephemeral: true
     });
     return;
 };

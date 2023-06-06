@@ -45,6 +45,7 @@ const pay: commandFunctionType = async (interaction) => {
     const amount = interaction.options.getInteger("amount", true);
     const target = interaction.options.getUser("user", true);
     const target_account = await get_account(target.id);
+    const moneyafterfee = Math.round(amount * 0.9);
     if (!target_account) {
         await interaction.editReply({
             embeds: [
@@ -71,7 +72,7 @@ const pay: commandFunctionType = async (interaction) => {
             ],
         });
         return;
-    } else if (amount < 0) {
+    } else if (moneyafterfee < 0) {
         await interaction.editReply({
             embeds: [
                 new Discord.EmbedBuilder()
@@ -84,7 +85,7 @@ const pay: commandFunctionType = async (interaction) => {
             ],
         });
         return;
-    } else if (amount == 0) {
+    } else if (moneyafterfee == 0) {
         await interaction.editReply({
             embeds: [
                 new Discord.EmbedBuilder()
@@ -115,8 +116,7 @@ const pay: commandFunctionType = async (interaction) => {
         });
         return;
     }
-    const moneyafterfee = Math.floor(amount * 0.9);
-    await account.money.transaction(-amount, "pay");
+    await account.money.transaction(-amount, `pay ${target.tag}`);
     await target_account.money.transaction(
         moneyafterfee,
         `paid by ${interaction.user.tag}`
