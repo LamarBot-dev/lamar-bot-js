@@ -170,7 +170,7 @@ const roastPlayer: commandFunctionType = async (interaction) => {
         });
         return;
     }
-    if (playerToRoast.id == userID) {
+    if (playerToRoast.id == userID && !DEV_MODE) {
         await interaction.editReply({
             embeds: [errorMessage(interaction, "You can't roast yourself")],
         });
